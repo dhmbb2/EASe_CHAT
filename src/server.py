@@ -1,11 +1,11 @@
 import socket
 import threading
 import pickle
-import utils
+import backend.utils as utils
 import os
 
 HOST = "127.0.0.1"
-PORT = 11452
+PORT = 11451
 
 clients = []
 clients_meta = {}

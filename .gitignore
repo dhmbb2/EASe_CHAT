@@ -1,0 +1,5 @@
+src/__pycache__/
+src/backend/__pycache__/
+.DS_Store
+src/.DS_Store
+src/backend/.DS_Store

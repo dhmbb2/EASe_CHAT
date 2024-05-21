@@ -1,17 +1,12 @@
 import socket
 import threading
 import pickle
-import utils
+import backend.utils as utils
 import os
 from queue import Queue
 
-HOST = "127.0.0.1"
-PORT = 11452
-self_username = None
 
-def init(in_queue: Queue, out_queue: Queue):
-    global self_username
-
+def init(in_queue: Queue, out_queue: Queue, HOST, PORT):
     csock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         csock.connect((HOST, PORT))
@@ -116,6 +111,3 @@ def send_file(csock, username, file_path):
             csock.sendall(file_data)
             bytes_sent += len(file_data)
     print("File sent")
-
-if __name__ == "__main__":
-    init()
