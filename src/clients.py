@@ -3,12 +3,13 @@ import threading
 import pickle
 import utils
 import os
+from queue import Queue
 
 HOST = "127.0.0.1"
 PORT = 11452
 self_username = None
 
-def init():
+def init(in_queue: Queue, out_queue: Queue):
     global self_username
 
     csock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -21,13 +22,13 @@ def init():
 
     auth_success = False
     while not auth_success:
-        mode = input("Choose sign_up or sign_in:")
-        username = input("Enter username: ")
-        password = input("Enter password: ")
-        if mode == "sign_in":
-            auth_success = sign_in(csock, username, password)
+        is_in, username, password = in_queue.get()
+        if is_in:
+            ret = sign_in(csock, username, password)
         else:
-            auth_success = sign_up(csock, username, password)
+            ret = sign_up(csock, username, password)
+        out_queue.put(ret)
+        auth_success = ret[0]
 
     self_username = username
     print("Auth success")
@@ -74,23 +75,19 @@ def sign_in(csock, username, password):
     csock.send(pickle.dumps(utils.Auth(username, password, True)))
     data = csock.recv(1024)
     if data == b'Failed':
-        print("User not found")
-        return False
+        return (False, f"User {username} not found")
     else:
         data = pickle.loads(data)
-        print(data.message)
-        return True
+        return (True, f"{data.username}, welcome!")
     
 def sign_up(csock, username, password):
     csock.send(pickle.dumps(utils.Auth(username, password, False)))
     data = csock.recv(1024)
     if data == b'Failed':
-        print("User already exists")
-        return False
+        return (False, f"User {username} already exists")
     else:
         data = pickle.loads(data)
-        print(data.message)
-        return True
+        return (True, f"Sign up successfully, {data.username}!")
     
 def handle_image(csock, header):
     length = header.length
