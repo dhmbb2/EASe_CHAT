@@ -73,7 +73,7 @@ def sign_in(csock, username, password):
         return (False, f"User {username} not found")
     else:
         data = pickle.loads(data)
-        return (True, f"{data.username}, welcome!")
+        return (True, f"Welcome!")
     
 def sign_up(csock, username, password):
     csock.send(pickle.dumps(utils.Auth(username, password, False)))
@@ -82,7 +82,7 @@ def sign_up(csock, username, password):
         return (False, f"User {username} already exists")
     else:
         data = pickle.loads(data)
-        return (True, f"Sign up successfully, {data.username}!")
+        return (True, f"Sign up successfully!")
     
 def handle_image(csock, header):
     length = header.length

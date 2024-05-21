@@ -67,6 +67,7 @@ def connection_handler(conn, addr):
                 username = data.username
                 # unlock here
                 conn.send(pickle.dumps(utils.SysWarning(f"Current user: {clients_meta.keys()}")))
+            print(clients_meta)
         elif isinstance(data, utils.Message):
             if data.target in clients_meta.keys():
                 clients_meta[data.target][1].send(pickle.dumps(utils.Message(data.target, data.message)))
