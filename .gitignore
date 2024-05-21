@@ -3,3 +3,5 @@ src/backend/__pycache__/
 .DS_Store
 src/.DS_Store
 src/backend/.DS_Store
+src/frontend/.DS_Store
+src/frontend/__pycache__/
