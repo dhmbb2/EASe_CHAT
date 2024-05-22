@@ -26,7 +26,7 @@ class CHAT(App):
         return wm
     
     def on_window_resize(self, window, width, height):
-        if width > 800 or height > 600:
+        if width != 800 or height != 600:
             window.size = (800, 600)
 
     def on_stop(self):
