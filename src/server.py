@@ -10,7 +10,6 @@ PORT = 11451
 
 # username : [password, is_online, conn]
 clients_meta = {}
-guid = 0
 
 def init():
     global guid
@@ -22,10 +21,9 @@ def init():
 
     try:
         while True:
-                conn, addr = lsock.accept()
-                client_thread = threading.Thread(target=connection_handler, args=(conn, addr))
-                client_thread.start()
-                guid += 1
+            conn, addr = lsock.accept()
+            client_thread = threading.Thread(target=connection_handler, args=(conn, addr))
+            client_thread.start()
     except KeyboardInterrupt:
         for client in clients_meta:
             client.send(pickle.dumps(utils.closeConnection()))
@@ -59,11 +57,14 @@ def connection_handler(conn, addr):
             print(f"Connection form {username} is closed")
             clients_meta[username]["is_online"] = False
             clients_meta[username]["conn"] = None
+            username = None
             if data.is_abrupt:
                 conn.close()
                 exit(0)
+            socket_send(conn, utils.closeConnection(False))
         # handle authorization request
         elif isinstance(data, utils.Auth):
+            print("AUTH ")
             if data.sign_in:
                 if not data.username in clients_meta.keys():
                     socket_send(conn, utils.SysWarning("No such user!"))
@@ -74,6 +75,7 @@ def connection_handler(conn, addr):
                 if clients_meta[data.username]["is_online"]:
                     socket_send(conn, utils.SysWarning("User already online!"))
                     continue
+                print("About_to_send")
                 socket_send(conn, utils.SysWarning("Success"))
                 clients_meta[data.username] = {"password": data.password, "is_online": True, "conn": conn}
             else:
@@ -82,7 +84,7 @@ def connection_handler(conn, addr):
                     continue
                 socket_send(conn, utils.SysWarning("Success"))
                 clients_meta[data.username] = {"password": data.password, "is_online": True, "conn": conn}
-                username = data.username
+            username = data.username
             print(clients_meta.keys())
         # handle message request
         elif isinstance(data, utils.Message):

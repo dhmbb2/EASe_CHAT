@@ -38,7 +38,7 @@ class Client:
         # channel to communicate with frontend thread
         self.in_queue = in_queue
         self.out_queue = out_queue
-        self.client_exit_event = threading.Event()
+        # self.client_exit_event = threading.Event()
 
     def __call__(self):
         # channel to communicate with receiving thread
@@ -58,6 +58,7 @@ class Client:
 
     def execute_from_sign_in(self):
         auth_success = False
+        # self.client_exit_event.clear()
 
         while not auth_success:
             item = self.in_queue.get()
@@ -76,7 +77,7 @@ class Client:
         print("Auth success")
         
         # start client threading
-        client_thread = threading.Thread(target=recv_handler, args=(self.csock, self.message_buffer, self.recv_queue, self.client_exit_event))
+        client_thread = threading.Thread(target=recv_handler, args=(self.csock, self.message_buffer, self.recv_queue))
         client_thread.start()
 
         while True:
@@ -98,7 +99,7 @@ class Client:
                 exit(0)
             elif option[0] == "sign_out":
                 self.csock.send(pickle.dumps(utils.closeConnection(is_abrupt=False)))
-                self.client_exit_event.set()    
+                # self.client_exit_event.set()    
                 return
     
 
@@ -127,7 +128,6 @@ class Client:
     
     def get_user_list(self):
         self.csock.send(pickle.dumps(utils.Request("get_user_list")))
-        print("get_user_list")
         return self.recv_queue.get()
     
     def send_message(self, package):
@@ -161,15 +161,11 @@ class Client:
     #         # send_file_thread.start()
     #         send_file(csock, username, file_path)
     
-def recv_handler(csock, buffer, recv_queue, exit_event):
+def recv_handler(csock, buffer, recv_queue):
     while True:
-        if exit_event.is_set():
-            print("break")
-            break
         data = csock.recv(1024)
         data = pickle.loads(data)
         if isinstance(data, utils.Message):
-            print(f"get: {data.message}")
             buffer.add_message(data.ufrom, data.ufrom, data.time, data.message)
         elif isinstance(data, utils.Request):
             if data.request == "get_user_list":
@@ -177,6 +173,8 @@ def recv_handler(csock, buffer, recv_queue, exit_event):
         elif isinstance(data, utils.File):
             # handle_image()
             print("A file is sent to you from ", data.ufrom)
+        elif isinstance(data, utils.closeConnection):
+            exit(0)
 
     
 
