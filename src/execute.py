@@ -16,7 +16,8 @@ class CHAT(App):
         self.title = 'EASE'
         Window.size = (800, 600)
         Window.clearcolor = hex_to_rgb('#282828')
-        self.manager = ClientManager(HOST = "127.0.0.1",PORT = 11451)
+        # self.manager = ClientManager(HOST = "127.0.0.1",PORT = 11451)
+        self.manager = None
         Window.bind(on_resize=self.on_window_resize)
         wm = WindowManager()
         wm.add_widget(LoginScreen(self.manager, name='login'))

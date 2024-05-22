@@ -21,6 +21,8 @@ class MainScreen(Screen):
         self.client_manager = manager
         self.user_list = []
         self.list_is_changed = True
+
+    def on_enter(self):
         self.layout = BoxLayout(orientation='vertical', spacing=-100, padding=[0, -70, 0, 70])
         # 查询在线名单
         Clock.schedule_interval(self.get_user_list, 1)
@@ -39,10 +41,11 @@ class MainScreen(Screen):
 
     def get_user_list(self, dt):
         # user_list = self.client_manager.get_user_list_api()
+        # 注释下面这一堆
         user_list = []
-        # for i in range(50):
-        #     user_list.append('user' + str(i+1))
-        # user_list = [user_list[i:i+4] for i in range(0, len(user_list), 4)]
+        for i in range(50):
+            user_list.append('user' + str(i+1))
+        user_list = [user_list[i:i+4] for i in range(0, len(user_list), 4)]
 
         if user_list != self.user_list:
             self.user_list = user_list
@@ -59,7 +62,7 @@ class MainScreen(Screen):
             # 显示标题
             title_box = BoxLayout(orientation='horizontal', size_hint=(1, 0.3))
             title_box.add_widget(Label(text='Start CHAT to your friends!', font_size=50, pos_hint={'center_x': 0.5}, color=word_color, font_name=title_font, size_hint=(0.8, 1)))
-            exit_button = Button(font_size=50, text='X', size_hint=(0.2, 1), background_normal='', background_color=[0,0,0,0], font_name=title_font, color=word_color)
+            exit_button = Button(font_size=30, text='Sign out', size_hint=(0.2, 1), background_normal='', background_color=[0,0,0,0], font_name=title_font, color=word_color)
             exit_button.bind(on_press=lambda x: self.do_exit())
             title_box.add_widget(exit_button)
             self.layout.add_widget(title_box)
