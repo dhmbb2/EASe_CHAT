@@ -89,7 +89,7 @@ class ChatScreen(Screen):
         # self.load_history()
 
         # # 读取服务器信息
-        Clock.schedule_interval(self.do_get_messgae, 0.01)
+        self.clock_event = Clock.schedule_interval(self.do_get_messgae, 0.01)
 
         self.add_widget(self.layout)
 
@@ -154,5 +154,7 @@ class ChatScreen(Screen):
         self.files_popup.dismiss()
 
     def do_exit(self):
+        Clock.unschedule(self.clock_event)
+        self.clock_event = None
         self.clear_widgets()
         App.get_running_app().root.current = 'main'

@@ -25,7 +25,7 @@ class MainScreen(Screen):
     def on_enter(self):
         self.layout = BoxLayout(orientation='vertical', spacing=-100, padding=[0, -70, 0, 70])
         # 查询在线名单
-        Clock.schedule_interval(self.get_user_list, 1)
+        self.clock_event = Clock.schedule_interval(self.get_user_list, 1)
 
         # 显示在线名单
         if self.list_is_changed:
@@ -100,6 +100,8 @@ class MainScreen(Screen):
         App.get_running_app().root.current = 'chat'
 
     def do_exit(self):
+        Clock.unschedule(self.clock_event)
+        self.clock_event = None
         self.client_manager.sign_out_api()
         App.get_running_app().root.current = 'login'
 

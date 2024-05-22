@@ -29,5 +29,8 @@ class CHAT(App):
         if width > 800 or height > 600:
             window.size = (800, 600)
 
+    def on_stop(self):
+        self.manager.xx_api()
+
 if __name__ == '__main__':
     CHAT().run()
