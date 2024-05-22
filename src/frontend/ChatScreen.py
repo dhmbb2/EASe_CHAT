@@ -52,12 +52,16 @@ class ChatScreen(Screen):
         self.exit_button = Button(font_size=70, text='X', size_hint=(0.2, 1), background_normal='', background_color=[0,0,0,0], font_name=title_font, color=word_color)
         self.exit_button.bind(on_press=lambda x: self.do_exit())
 
+        if self.title_label.parent:
+            self.title_label.parent.remove_widget(self.title_label)
         self.title_box.add_widget(self.title_label)
         self.title_box.add_widget(self.exit_button)
         self.layout.add_widget(self.title_box)
 
         # 显示历史信息
         self.history_scroll = ScrollView(size_hint=(1, 0.6), pos_hint={'center_x': 0.5}, scroll_type=['bars', 'content'])
+        if self.history_label.parent:
+            self.history_label.parent.remove_widget(self.history_label)
         self.history_scroll.add_widget(self.history_label)
         self.layout.add_widget(self.history_scroll)
 
