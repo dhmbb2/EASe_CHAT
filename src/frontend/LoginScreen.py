@@ -90,8 +90,8 @@ class LoginScreen(Screen):
             popup = Popup(title='Error', content=Label(text='Please enter your username and password.', text_size=(300, None), font_name=word_font), size=(400, 200), size_hint=(None, None), title_font=word_font)
             popup.open()
         else:
-            # is_success, word = self.client_manager.sign_api(is_in=self.is_in, user_name=self.username.text, password=self.password.text)
-            is_success, word = True, 'Success'
+            is_success, word = self.client_manager.sign_api(is_in=self.is_in, user_name=self.username.text, password=self.password.text)
+            # is_success, word = True, 'Success'
             if is_success:
                 popup = Popup(title='Success', content=Label(text=word, text_size=(300, None), font_name=word_font), size=(400, 200), size_hint=(None, None), title_font=word_font)
                 popup.open()

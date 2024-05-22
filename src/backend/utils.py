@@ -4,8 +4,10 @@ class Credentials:
         self.password = password
 
 class Message:
-    def __init__(self, target, message):
-        self.target = target
+    def __init__(self, uto, ufrom, time, message):
+        self.uto = uto
+        self.ufrom = ufrom
+        self.time = time
         self.message = message
 
 class File:
@@ -27,3 +29,9 @@ class SysWarning:
 class closeConnection:
     def __init__(self) -> None:
         pass
+
+class Request:
+    "Request can either be get_user_list "
+    def __init__(self, request, object):
+        self.request = request
+        self.object = None

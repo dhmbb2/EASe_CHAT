@@ -50,15 +50,19 @@ def connection_handler(conn, addr):
             clients_meta.pop(username)
             conn.close()
             exit(0)
+        # handle authorization request
         elif isinstance(data, utils.Auth):
             if data.sign_in:
                 if data.username in clients_meta.keys():
-                    conn.send(pickle.dumps(utils.SysWarning(f"Current user: {clients_meta.keys()}")))
+                    if data.password == clients_meta[data.username][0]:
+                        conn.send(utils.SysWarning("Success"))
+                    else:
+                        conn.send(utils.SysWarning("Wrong password!"))
                 else:
-                    conn.send(b"Failed")
+                    conn.send(utils.SysWarning("No such user!"))
             else:
                 if data.username in clients_meta.keys():
-                    conn.send(b"Failed")
+                    conn.send(utils.SysWarning("User already exists!"))
                     continue
                 # lock here
                 # id = guid
@@ -66,8 +70,9 @@ def connection_handler(conn, addr):
                 # guid += 1
                 username = data.username
                 # unlock here
-                conn.send(pickle.dumps(utils.SysWarning(f"Current user: {clients_meta.keys()}")))
+                # conn.send(pickle.dumps(utils.SysWarning(f"Current user: {clients_meta.keys()}")))
             print(clients_meta)
+        # handle message request
         elif isinstance(data, utils.Message):
             if data.target in clients_meta.keys():
                 clients_meta[data.target][1].send(pickle.dumps(utils.Message(data.target, data.message)))
@@ -91,7 +96,9 @@ def connection_handler(conn, addr):
                 # cache the file
                 with open(save_path, "wb") as file:
                     file.write(file_data)
-
+        elif isinstance(data, utils.Request):
+            if data.request == "get_user_list":
+                conn.send(pickle.dumps(list(clients_meta.keys())))
         else:
             conn.send(pickle.dumps(utils.SysWarning("Invalid request!")))
                                    
