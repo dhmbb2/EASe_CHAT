@@ -27,11 +27,11 @@ class SysWarning:
         self.message = message
 
 class closeConnection:
-    def __init__(self) -> None:
-        pass
+    def __init__(self, is_abrupt) -> None:
+        self.is_abrupt = is_abrupt
 
 class Request:
     "Request can either be get_user_list "
-    def __init__(self, request, object):
+    def __init__(self, request, object=None):
         self.request = request
-        self.object = None
+        self.object = object

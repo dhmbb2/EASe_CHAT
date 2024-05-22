@@ -85,11 +85,11 @@ class ChatScreen(Screen):
 
         # 加载历史信息
         # 注释掉下一段
-        self.history = [' '*90, 'You: Hello', f'{self.user_chat_with}: Hi', 'You: How are you?', f'{self.user_chat_with}: Fine, thank you. And you?', 'You: I am fine too. Thank you.', f'{self.user_chat_with}: Bye', 'You: Bye']
-        self.load_history()
+        # self.history = [' '*90, 'You: Hello', f'{self.user_chat_with}: Hi', 'You: How are you?', f'{self.user_chat_with}: Fine, thank you. And you?', 'You: I am fine too. Thank you.', f'{self.user_chat_with}: Bye', 'You: Bye']
+        # self.load_history()
 
         # # 读取服务器信息
-        # Clock.schedule_interval(self.do_get_messgae, 0.01)
+        Clock.schedule_interval(self.do_get_messgae, 0.01)
 
         self.add_widget(self.layout)
 
@@ -105,27 +105,27 @@ class ChatScreen(Screen):
         self.history_label.height = self.history_label.texture_size[1]
 
     def do_get_messgae(self, dt):
-        # packages = get_message_api()
-        # self.history = [' '*90]
-        # for package in packages:
-        #     user, time, item = package
-        #     if item[0] == 'message':
-        #         self.history.append(f'({time}) {user}: {item[1]}')
-        #     elif item[0] == 'file':
-        #         self.history.append(f'({time}) {user}: [file] {item[1]}')
+        packages = self.client_manager.get_message_api(self.user_chat_with)
+        self.history = [' '*90]
+        for package in packages:
+            user, time, item = package
+            if item[0] == 'message':
+                self.history.append(f'({time}) {user}: {item[1]}')
+            elif item[0] == 'file':
+                self.history.append(f'({time}) {user}: [file] {item[1]}')
 
         self.load_history()
 
     def do_send_message(self, instance):
         # 注释掉下一段
-        new_message = f'({get_time()}) You: {self.input.plain_text}'
-        new_message = textwrap.fill(new_message, 90)
-        self.history.append(new_message)
-        self.load_history()
+        # new_message = f'({get_time()}) You: {self.input.plain_text}'
+        # new_message = textwrap.fill(new_message, 90)
+        # self.history.append(new_message)
+        # self.load_history()
 
-        # item = ('message', self.input.plain_text)
-        # package = (self.user_chat_with, get_time(), item)
-        # send_message_api(package)
+        item = ('message', self.input.plain_text)
+        package = (self.user_chat_with, get_time(), item)
+        self.client_manager.send_message_api(package)
 
         # 清空输入框
         self.input.text = ''
@@ -144,12 +144,12 @@ class ChatScreen(Screen):
     def on_file_selection(self, instance, value, _):
 
         # 注释掉下一段
-        self.history.append(f'({get_time()}) You: [file] {value[0]}')
-        self.load_history()
+        # self.history.append(f'({get_time()}) You: [file] {value[0]}')
+        # self.load_history()
 
-        # item = ('file', value[0])
-        # package = (self.user_chat_with, get_time(), item)
-        # send_message_api(package)
+        item = ('file', value[0])
+        package = (self.user_chat_with, get_time(), item)
+        self.client_manager.send_message_api(package)
 
         self.files_popup.dismiss()
 

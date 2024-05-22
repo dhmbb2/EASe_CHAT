@@ -40,11 +40,11 @@ class MainScreen(Screen):
         self.add_widget(self.layout)
 
     def get_user_list(self, dt):
-        # user_list = self.client_manager.get_user_list_api()
+        user_list = self.client_manager.get_user_list_api()
         # 注释下面这一堆
-        user_list = []
-        for i in range(50):
-            user_list.append('user' + str(i+1))
+        # user_list = []
+        # for i in range(50):
+        #     user_list.append('user' + str(i+1))
         user_list = [user_list[i:i+4] for i in range(0, len(user_list), 4)]
 
         if user_list != self.user_list:
@@ -100,6 +100,7 @@ class MainScreen(Screen):
         App.get_running_app().root.current = 'chat'
 
     def do_exit(self):
+        self.client_manager.sign_out_api()
         App.get_running_app().root.current = 'login'
 
 

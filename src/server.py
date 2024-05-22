@@ -7,12 +7,12 @@ import os
 HOST = "127.0.0.1"
 PORT = 11451
 
-clients = []
+
+# username : [password, is_online, conn]
 clients_meta = {}
 guid = 0
 
 def init():
-    global clients
     global guid
 
     lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -23,20 +23,17 @@ def init():
     try:
         while True:
                 conn, addr = lsock.accept()
-                clients.append(conn)
-
                 client_thread = threading.Thread(target=connection_handler, args=(conn, addr))
                 client_thread.start()
                 guid += 1
     except KeyboardInterrupt:
-        for client in clients:
+        for client in clients_meta:
             client.send(pickle.dumps(utils.closeConnection()))
-            client.close()
+            client["conn"].close()
         lsock.close()
         exit(0)
 
 def connection_handler(conn, addr):
-    global clients
     global clients_meta
     # global guid
 
@@ -44,41 +41,54 @@ def connection_handler(conn, addr):
 
     while True:
         data = conn.recv(1024)
+        # handle abrupt connection close
+        if not data:
+            if username is None:
+                conn.close()
+                exit(0)
+            print(f"Connection form {username} is closed")
+            clients_meta[username]["is_online"] = False
+            clients_meta[username]["conn"].close()
+            clients_meta[username]["conn"] = None
+            exit(0)
         data = pickle.loads(data)
         if isinstance(data, utils.closeConnection):
-            clients.remove(conn)
-            clients_meta.pop(username)
-            conn.close()
-            exit(0)
+            if username is None:
+                conn.close()
+                exit(0)
+            print(f"Connection form {username} is closed")
+            clients_meta[username]["is_online"] = False
+            clients_meta[username]["conn"] = None
+            if data.is_abrupt:
+                conn.close()
+                exit(0)
         # handle authorization request
         elif isinstance(data, utils.Auth):
             if data.sign_in:
-                if data.username in clients_meta.keys():
-                    if data.password == clients_meta[data.username][0]:
-                        conn.send(utils.SysWarning("Success"))
-                    else:
-                        conn.send(utils.SysWarning("Wrong password!"))
-                else:
-                    conn.send(utils.SysWarning("No such user!"))
+                if not data.username in clients_meta.keys():
+                    socket_send(conn, utils.SysWarning("No such user!"))
+                    continue
+                if data.password != clients_meta[data.username]["password"]:
+                    socket_send(conn, utils.SysWarning("Wrong password!"))
+                    continue
+                if clients_meta[data.username]["is_online"]:
+                    socket_send(conn, utils.SysWarning("User already online!"))
+                    continue
+                socket_send(conn, utils.SysWarning("Success"))
+                clients_meta[data.username] = {"password": data.password, "is_online": True, "conn": conn}
             else:
                 if data.username in clients_meta.keys():
-                    conn.send(utils.SysWarning("User already exists!"))
+                    socket_send(conn, utils.SysWarning("User already exists!"))
                     continue
-                # lock here
-                # id = guid
-                clients_meta[data.username] = (data.password, conn)
-                # guid += 1
+                socket_send(conn, utils.SysWarning("Success"))
+                clients_meta[data.username] = {"password": data.password, "is_online": True, "conn": conn}
                 username = data.username
-                # unlock here
-                # conn.send(pickle.dumps(utils.SysWarning(f"Current user: {clients_meta.keys()}")))
-            print(clients_meta)
+            print(clients_meta.keys())
         # handle message request
         elif isinstance(data, utils.Message):
-            if data.target in clients_meta.keys():
-                clients_meta[data.target][1].send(pickle.dumps(utils.Message(data.target, data.message)))
-                conn.send(pickle.dumps(utils.SysWarning("Message sent!")))
-            else:
-                conn.send(pickle.dumps(utils.SysWarning("User not found!")))
+            if data.uto in clients_meta.keys():
+                print(f"get message: {data.message}")
+                socket_send(clients_meta[data.uto]["conn"], data)
         elif isinstance(data, utils.File):
             if data.uto in clients_meta.keys():
                 # inform that there is file incoming
@@ -98,7 +108,11 @@ def connection_handler(conn, addr):
                     file.write(file_data)
         elif isinstance(data, utils.Request):
             if data.request == "get_user_list":
-                conn.send(pickle.dumps(list(clients_meta.keys())))
+                user_list = []
+                for key in clients_meta.keys():
+                    if clients_meta[key]["is_online"]:
+                        user_list.append(key)
+                socket_send(conn, utils.Request("get_user_list", user_list))
         else:
             conn.send(pickle.dumps(utils.SysWarning("Invalid request!")))
                                    

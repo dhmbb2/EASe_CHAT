@@ -38,6 +38,7 @@ class Client:
         # channel to communicate with frontend thread
         self.in_queue = in_queue
         self.out_queue = out_queue
+        self.client_exit_event = threading.Event()
 
     def __call__(self):
         # channel to communicate with receiving thread
@@ -50,58 +51,89 @@ class Client:
         except ConnectionRefusedError as err:
             print(f"Connection refused: {err}")
             exit(1)
+        
+        while True:
+            self.execute_from_sign_in()
+    
 
+    def execute_from_sign_in(self):
         auth_success = False
+
         while not auth_success:
-            is_in, username, password = self.in_queue.get()
+            item = self.in_queue.get()
+            if item[0] != "sign":
+                continue
+            _, is_in, username, password = item
             if is_in:
                 ret = self.sign_in(username, password)
             else:
                 ret = self.sign_up(username, password)
             self.out_queue.put(ret)
+            print(ret[0])
             auth_success = ret[0]
 
-        self_username = username
+        self.username = username
         print("Auth success")
         
         # start client threading
-        client_thread = threading.Thread(target=recv_handler, args=(self.csock, self.message_buffer, self.recv_queue))
+        client_thread = threading.Thread(target=recv_handler, args=(self.csock, self.message_buffer, self.recv_queue, self.client_exit_event))
         client_thread.start()
 
         while True:
             option = self.in_queue.get()
-            assert isinstance(option, str), "mode is of the wrong type"
-
-            if option == "message_list":
-                username = self.in_queue.get()
-                self.out_queue.put(self.get_messages(self_username, username))
-            elif option == "user_list":
+            print(option)
+            if option[0] == "message_list":
+                username = option[1]
+                self.out_queue.put(self.get_messages(username))
+            elif option[0] == "user_list":
+                print("here")
                 self.out_queue.put(self.get_user_list())
+            elif option[0] == "send_message":
+                package = option[1]
+                if package[2][0] == "message":
+                    self.send_message(package) 
+            elif option[0] == "xx":
+                self.csock.send(pickle.dumps(utils.closeConnection(is_abrupt=True)))
+                self.csock.close()
+                exit(0)
+            elif option[0] == "sign_out":
+                self.csock.send(pickle.dumps(utils.closeConnection(is_abrupt=False)))
+                self.client_exit_event.set()    
+                return
     
 
     def sign_in(self, username, password):
         # send the message
         self.csock.send(pickle.dumps(utils.Auth(username, password, True)))
-        data = self.csock.recv(1024)
-        if data == b"Success":
+        data = pickle.loads(self.csock.recv(1024))
+        assert isinstance(data, utils.SysWarning), "data is of the wrong type"
+        if data.message == "Success":
             return (True, "Sign in successfully!")
         else:
-            return (False, str(data))
+            return (False, data.message)
         
         
     def sign_up(self, username, password):
         self.csock.send(pickle.dumps(utils.Auth(username, password, False)))
-        data = self.csock.recv(1024)
-        if data == b"Success":
+        data = pickle.loads(self.csock.recv(1024))
+        assert isinstance(data, utils.SysWarning), "data is of the wrong type"
+        if data.message == "Success":
             return (True, "Sign up successfully!")
         else:
-            return (False, str(data))
+            return (False, data.message)
         
     def get_messages(self, username):
         return self.message_buffer.get_messages(username)
     
     def get_user_list(self):
         self.csock.send(pickle.dumps(utils.Request("get_user_list")))
+        print("get_user_list")
+        return self.recv_queue.get()
+    
+    def send_message(self, package):
+        target, time, message = package
+        self.message_buffer.add_message(target, self.username, time, message)
+        self.csock.send(pickle.dumps(utils.Message(target, self.username, time, message)))
 
 
     # while True:
@@ -129,11 +161,15 @@ class Client:
     #         # send_file_thread.start()
     #         send_file(csock, username, file_path)
     
-def recv_handler(csock, buffer, recv_queue):
+def recv_handler(csock, buffer, recv_queue, exit_event):
     while True:
+        if exit_event.is_set():
+            print("break")
+            break
         data = csock.recv(1024)
         data = pickle.loads(data)
         if isinstance(data, utils.Message):
+            print(f"get: {data.message}")
             buffer.add_message(data.ufrom, data.ufrom, data.time, data.message)
         elif isinstance(data, utils.Request):
             if data.request == "get_user_list":
