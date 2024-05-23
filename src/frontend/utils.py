@@ -4,6 +4,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.graphics import Color, RoundedRectangle, StencilPush, StencilUse, StencilUnUse
 from kivy.uix.button import Button
+from kivy.uix.textinput import TextInput
 
 
 def hex_to_rgb(hex_color, alpha=1.0):
@@ -27,6 +28,30 @@ class ColoredRoundedLabel(BoxLayout):
     def _update_rect(self, instance, value):
         self.rect.pos = instance.pos
         self.rect.size = instance.size
+
+class MyTextInput(TextInput):
+    MAX_LINE_LENGTH = 79  # 每行最多的字符数
+
+    def __init__(self, **kwargs):
+        super(MyTextInput, self).__init__(**kwargs)
+        self.plain_text = ''
+
+    def insert_text(self, substring, from_undo=False):
+        lines = self.text.split('\n')
+        if len(lines[-1]) + len(substring) > self.MAX_LINE_LENGTH:
+            substring = '\n' + substring
+        self.plain_text += substring.replace('\n', '')
+        return super(MyTextInput, self).insert_text(substring, from_undo=from_undo)
+    
+    def do_backspace(self, from_undo=False, mode='bkspc'):
+        # 获取删除前的文本长度
+        old_length = len(self.plain_text)
+        # 调用父类的 do_backspace 方法
+        super(MyTextInput, self).do_backspace(from_undo=from_undo, mode=mode)
+        # 计算删除的字符数
+        num_deleted = old_length - len(self.text)
+        # 更新 self.plain_text
+        self.plain_text = self.plain_text[:-num_deleted]
 
 class MyApp(App):
     def build(self):

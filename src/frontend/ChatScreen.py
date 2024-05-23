@@ -25,20 +25,6 @@ input_word_color = hex_to_rgb('#282828')
 title_font = 'src/fonts/AcademyEngravedStd.otf'
 word_font = 'src/fonts/Consolas.ttf'
 
-class MyTextInput(TextInput):
-    MAX_LINE_LENGTH = 90  # 每行最多的字符数
-
-    def __init__(self, **kwargs):
-        super(MyTextInput, self).__init__(**kwargs)
-        self.plain_text = ''
-
-    def insert_text(self, substring, from_undo=False):
-        lines = self.text.split('\n')
-        if len(lines[-1]) + len(substring) > self.MAX_LINE_LENGTH:
-            substring = '\n' + substring
-        self.plain_text += substring.replace('\n', '')
-        return super(MyTextInput, self).insert_text(substring, from_undo=from_undo)
-
 class ChatScreen(Screen):
     chat_with = StringProperty()
     user_chat_with = None
@@ -46,6 +32,7 @@ class ChatScreen(Screen):
     def __init__(self, manager, **kwargs):
         super(ChatScreen, self).__init__(**kwargs)
         self.client_manager = manager
+        self.old_packages = []
 
     def on_enter(self):
         self.layout = BoxLayout(orientation='vertical', spacing=20, padding=[0, 50, 0, 0])
@@ -62,7 +49,7 @@ class ChatScreen(Screen):
         self.layout.add_widget(self.title_box)
 
         # 显示历史信息
-        self.history_scroll = ScrollView(size_hint=(1, 0.6))
+        self.history_scroll = ScrollView(size_hint=(1, 0.725))
         if self.history_box.parent:
             self.history_box.parent.remove_widget(self.history_box)
         self.history_scroll.add_widget(self.history_box)
@@ -114,58 +101,62 @@ class ChatScreen(Screen):
     def do_get_message(self, dt):
         packages = self.client_manager.get_message_api(self.user_chat_with)
         # self.history = [' '*90]
-        self.history_box.add_widget(Label(text=' '*90, font_size=25, color=word_color, font_name=word_font, size_hint=(1, None), height=50))
-        for package in packages:
-            user, time, item = package
-            # item = ('file', 'test.txt', True)
-            if item[0] == 'message':
-                if user == self.user_chat_with:
-                    message = Label(text=f'({time}) {user}: {item[1]}', halign='left', font_size=25, color=word_color, font_name=word_font, size_hint=(1, None), height=50)
-                    message.bind(width=lambda s, w: s.setter('text_size')(s, (w, None)))
-                    self.history_box.add_widget(message)
-                    # self.history.append(f'({time}) {user}: {item[1]}')
-                else:
-                    message = Label(text=f'({time}) You: {item[1]}', halign='left', font_size=25, color=my_word_color, font_name=word_font, size_hint=(1, None), height=50)
-                    message.bind(width=lambda s, w: s.setter('text_size')(s, (w, None)))
-                    self.history_box.add_widget(message)
-                    # self.history.append(f'({time}) {user}: {item[1]}')
-            elif item[0] == 'file':
-                # self.history.append(f'({time}) {user}: [file] {item[1]}')
-                file_box = BoxLayout(orientation='horizontal', size_hint=(1, None), height=50)
-                if user == self.user_chat_with:
-                    text = Label(text=f'({time}) {user}: [file] {item[1]}', halign='left', font_size=25, color=word_color, font_name=word_font, size_hint=(0.85, None), height=50)
-                    text.bind(width=lambda s, w: s.setter('text_size')(s, (w, None)))
-                    file_box.add_widget(text)
-                    if type(item[2]) == str:
-                        # download_button = Button(text='Download', size_hint=(0.15, 1), color=word_color, font_name=word_font, font_size=25)
-                        # download_button.bind(on_press=lambda x: self.do_get_file(item[1]))
-                        # file_box.add_widget(download_button)
-                        popup = Popup(title='Download warning', content=Label(text=item[2], font_size=25, color=word_color, font_name=word_font), size=(400, 200), size_hint=(None, None), title_font=word_font)
-                        popup.open()
-                    elif item[2]:
-                        download_button = Button(text='Download', size_hint=(0.15, 1), color=word_color, font_name=word_font, font_size=25)
-                        download_button.bind(on_press=lambda x: self.do_download_file(item[1]))
-                        file_box.add_widget(download_button)
-                    elif not item[2]:
-                        file_box.add_widget(Label(text='Downloaded', halign='left', font_size=25, color=word_color, font_name=word_font, size_hint=(0.15, None), height=50))
-                    self.history_box.add_widget(file_box)
-                else:
-                    text = Label(text=f'({time}) You: [file] {item[1]}', halign='left', font_size=25, color=my_word_color, font_name=word_font, size_hint=(0.85, None), height=50)
-                    text.bind(width=lambda s, w: s.setter('text_size')(s, (w, None)))
-                    file_box.add_widget(text)
-                    if type(item[2]) == str:
-                        # download_button = Button(text='Download', size_hint=(0.15, 1), color=word_color, font_name=word_font, font_size=25)
-                        # download_button.bind(on_press=lambda x: self.do_get_file(item[1]))
-                        # file_box.add_widget(download_button)
-                        popup = Popup(title='Download warning', content=Label(text=item[2], font_size=25, color=word_color, font_name=word_font), size=(400, 200), size_hint=(None, None), title_font=word_font)
-                        popup.open()
-                    elif item[2]:
-                        download_button = Button(text='Download', size_hint=(0.15, 1), color=word_color, font_name=word_font, font_size=25)
-                        download_button.bind(on_press=lambda x: self.do_download_file(item[1]))
-                        file_box.add_widget(download_button)
-                    elif not item[2]:
-                        file_box.add_widget(Label(text='Have downloaded', halign='left', font_size=25, color=my_word_color, font_name=word_font, size_hint=(0.15, None), height=50))
-                    self.history_box.add_widget(file_box)
+        if packages != self.old_packages:
+            self.old_packages = packages.copy()
+            self.history_box.clear_widgets()
+            # self.history_box.add_widget(Label(text=(' '+'1\n')*10, font_size=25, color=word_color, font_name=word_font, size_hint=(1, None), height=50))
+            for package in packages:
+                user, time, item = package
+                # item = ('file', 'test.txt', True)
+                if item[0] == 'message':
+                    if user == self.user_chat_with:
+                        message = Label(text=f'({time}) {user}: {item[1]}', halign='left', font_size=25, color=word_color, font_name=word_font, size_hint=(1, None), height=50)
+                        message.bind(width=lambda s, w: s.setter('text_size')(s, (w, None)))
+                        self.history_box.add_widget(message)
+                        # self.history.append(f'({time}) {user}: {item[1]}')
+                    else:
+                        message = Label(text=f'({time}) You: {item[1]}', halign='left', font_size=25, color=my_word_color, font_name=word_font, size_hint=(1, None), height=50)
+                        message.bind(width=lambda s, w: s.setter('text_size')(s, (w, None)))
+                        self.history_box.add_widget(message)
+                        # self.history.append(f'({time}) {user}: {item[1]}')
+                elif item[0] == 'file':
+                    # self.history.append(f'({time}) {user}: [file] {item[1]}')
+                    file_box = BoxLayout(orientation='horizontal', size_hint=(1, None), height=50)
+                    if user == self.user_chat_with:
+                        text = Label(text=f'({time}) {user}: [file] {item[1]}', halign='left', font_size=25, color=word_color, font_name=word_font, size_hint=(0.85, None), height=50)
+                        text.bind(width=lambda s, w: s.setter('text_size')(s, (w, None)))
+                        file_box.add_widget(text)
+                        if type(item[2]) == str:
+                            # download_button = Button(text='Download', size_hint=(0.15, 1), color=word_color, font_name=word_font, font_size=25)
+                            # download_button.bind(on_press=lambda x: self.do_get_file(item[1]))
+                            # file_box.add_widget(download_button)
+                            popup = Popup(title='Download warning', content=Label(text=item[2], font_size=25, color=word_color, font_name=word_font), size=(400, 200), size_hint=(None, None), title_font=word_font)
+                            popup.open()
+                        elif item[2]:
+                            download_button = Button(text='Download', size_hint=(0.15, 1), color=word_color, font_name=word_font, font_size=25)
+                            download_button.bind(on_press=lambda x: self.do_download_file(item[1]))
+                            file_box.add_widget(download_button)
+                        elif not item[2]:
+                            file_box.add_widget(Label(text='Downloaded', halign='left', font_size=25, color=word_color, font_name=word_font, size_hint=(0.15, None), height=50))
+                        self.history_box.add_widget(file_box)
+                    else:
+                        text = Label(text=f'({time}) You: [file] {item[1]}', halign='left', font_size=25, color=my_word_color, font_name=word_font, size_hint=(0.85, None), height=50)
+                        text.bind(width=lambda s, w: s.setter('text_size')(s, (w, None)))
+                        file_box.add_widget(text)
+                        if type(item[2]) == str:
+                            # download_button = Button(text='Download', size_hint=(0.15, 1), color=word_color, font_name=word_font, font_size=25)
+                            # download_button.bind(on_press=lambda x: self.do_get_file(item[1]))
+                            # file_box.add_widget(download_button)
+                            popup = Popup(title='Download warning', content=Label(text=item[2], font_size=25, color=word_color, font_name=word_font), size=(400, 200), size_hint=(None, None), title_font=word_font)
+                            popup.open()
+                        elif item[2]:
+                            download_button = Button(text='Download', size_hint=(0.15, 1), color=word_color, font_name=word_font, font_size=25)
+                            download_button.bind(on_press=lambda x: self.do_download_file(item[1]))
+                            file_box.add_widget(download_button)
+                        elif not item[2]:
+                            file_box.add_widget(Label(text='Downloaded', halign='left', font_size=25, color=my_word_color, font_name=word_font, size_hint=(0.15, None), height=50))
+                        self.history_box.add_widget(file_box)
+            self.history_box.bind(minimum_height=self.history_box.setter('height'))
 
         # self.load_history()
 

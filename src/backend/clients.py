@@ -85,7 +85,6 @@ class Client:
 
         while True:
             option = self.in_queue.get()
-            print(option)
             if option[0] == "message_list":
                 username = option[1]
                 self.out_queue.put(self.get_messages(username))

@@ -76,7 +76,7 @@ class MainScreen(Screen):
             self.layout.add_widget(title_box)
             
             # 创建一个ScrollView
-            scroll_view = ScrollView(size_hint=(1, 0.7), do_scroll_x=False)
+            scroll_view = ScrollView(size_hint=(1, 0.7))
             # 创建一个BoxLayout，将其添加到ScrollView中
             user_box = BoxLayout(orientation='vertical', size_hint=(1, None), spacing=100, padding=[0, 100, 0, 20])
             user_box.bind(minimum_height=user_box.setter('height'))
