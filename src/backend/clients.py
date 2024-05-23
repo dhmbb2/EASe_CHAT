@@ -7,6 +7,7 @@ from queue import Queue
 import json
 
 MessageCache_root = "MessageCache"
+FileCache_root = "UserFileCache"
 
 class MessageBuffer:
     def __init__(self, max_len):
@@ -27,7 +28,7 @@ class MessageBuffer:
         if username not in self.buffer:
             self.lock.release()
             return []
-        ret = self.buffer[username]
+        ret = self.buffer[username].copy()
         self.lock.release()
         return ret
 
@@ -73,7 +74,6 @@ class Client:
             else:
                 ret = self.sign_up(username, password)
             self.out_queue.put(ret)
-            print(ret[0])
             auth_success = ret[0]
 
         self.username = username
@@ -85,19 +85,20 @@ class Client:
 
         while True:
             option = self.in_queue.get()
-            print(option)
             if option[0] == "message_list":
                 username = option[1]
                 self.out_queue.put(self.get_messages(username))
             elif option[0] == "user_list":
-                print("here")
                 self.out_queue.put(self.get_user_list())
             elif option[0] == "send_message":
                 package = option[1]
                 if package[2][0] == "message":
                     self.send_message(package) 
+                if package[2][0] == "file":
+                    self.send_file(package)
+            elif option[0] == "download_file":
+                self.download_file(option[1], option[2])
             elif option[0] == "xx":
-                print("xx")
                 self.csock.send(pickle.dumps(utils.closeConnection(is_abrupt=True)))
                 exit(0)
             elif option[0] == "sign_out":
@@ -138,6 +139,65 @@ class Client:
         self.message_buffer.add_message(target, self.username, time, message)
         self.csock.send(pickle.dumps(utils.Message(target, self.username, time, message)))
 
+    def send_file(self, package):
+        target, time, item = package
+        file_path = item[1]
+        file_size = os.path.getsize(file_path)
+        _, file_name = os.path.split(file_path)
+        self.message_buffer.add_message(target, self.username, time, (item[0], file_name, item[2]))
+        self.csock.send(pickle.dumps(utils.File(target, self.username, time, file_name, file_size)))
+        
+        with open(file_path, 'rb') as f:    
+            bytes_sent = 0
+            while bytes_sent < file_size:
+                file_data = f.read(1024)
+                if not file_data:
+                    break  # 文件读取完毕
+                self.csock.sendall(file_data)
+                bytes_sent += len(file_data)
+        print("File sent")
+
+    def download_file(self, target, old_file_path):
+        _, file_name = os.path.split(old_file_path)
+        file_root = os.path.join(MessageCache_root, self.username, target)
+        if not os.path.exists(file_root):
+            os.makedirs(file_root)
+        file_path = os.path.join(file_root, file_name)
+        if os.path.exists(file_path):
+            self.change_file_state(target, file_name, "Already downloaded!")
+        
+        # send request to server side asking for file
+        # notice that the uto and ufrom are reversed
+        # because we always want to download file from the other side
+        # you will get another port number for file transfer
+        self.csock.send(pickle.dumps(utils.File(self.username, target, 0, file_name, 0, ask_for_download=True)))
+        # corresponding logic is implemented in recv handler, 
+        port_num = self.recv_queue.get()
+        file_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        file_socket.connect((self.HOST, port_num))
+        file_download_thread = threading.Thread(target=self.file_download_handler, args=(target, file_socket, file_path))
+        file_download_thread.start()
+
+    def file_download_handler(self, target, file_socket, file_path):
+        data = b''
+        _, file_name = os.path.split(file_path)
+        while True:
+            data += file_socket.recv(1024)
+            if not data:
+                break
+        with open(file_path, "wb") as file:
+            file.write(data)
+        self.change_file_state(target, file_name, False)
+        print("File downloaded")
+
+    def change_file_state(self, target, file_path, new_state):
+        self.message_buffer.lock.acquire()
+        for i, package in enumerate(self.message_buffer.buffer[target]):
+            item = package[2]
+            if item[1] == file_path:
+                new_item = (item[0], item[1], new_state)
+                self.message_buffer.buffer[target][i] = (package[0], package[1], new_item)
+        self.message_buffer.lock.release()
 
     # while True:
     #     try:
@@ -173,9 +233,11 @@ def recv_handler(csock, buffer, recv_queue):
         elif isinstance(data, utils.Request):
             if data.request == "get_user_list":
                 recv_queue.put(data.object)
+            elif data.request == "file_port":
+                recv_queue.put(data.object)
         elif isinstance(data, utils.File):
-            # handle_image()
-            print("A file is sent to you from ", data.ufrom)
+            print("Notifi recv")
+            buffer.add_message(data.ufrom, data.ufrom, data.time, ("file", data.file_name, True))
         elif isinstance(data, utils.closeConnection):
             print("recv close")
             if data.is_abrupt:
@@ -189,6 +251,7 @@ def recv_handler(csock, buffer, recv_queue):
 def handle_image(csock, header):
     length = header.length
     name = header.file_name
+
     data = b''
     while len(data) < length:
         data += csock.recv(1024)

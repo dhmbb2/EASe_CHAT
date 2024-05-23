@@ -6,3 +6,5 @@ src/backend/.DS_Store
 src/frontend/.DS_Store
 src/frontend/__pycache__/
 src/test.py
+FileCache/
+MessageCache/

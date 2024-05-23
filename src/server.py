@@ -74,7 +74,6 @@ class Server:
                     if self.clients_meta[data.username]["is_online"]:
                         socket_send(conn, utils.SysWarning("User already online!"))
                         continue
-                    print("About_to_send")
                     socket_send(conn, utils.SysWarning("Success"))
                     self.clients_meta[data.username] = {"password": data.password, "is_online": True, "conn": conn}
                 else:
@@ -91,22 +90,7 @@ class Server:
                     print(f"get message: {data.message}")
                     socket_send(self.clients_meta[data.uto]["conn"], data)
             elif isinstance(data, utils.File):
-                if data.uto in self.clients_meta.keys():
-                    # inform that there is file incoming
-                    socket_send(self.clients_meta[data.uto][1], data.file_name)
-                    # receive file
-                    file_data = b''
-                    save_root = os.path.join(os.getcwd(), "FileCache", data.ufrom)
-                    if not os.path.exists(save_root):
-                        os.makedirs(save_root)
-                    save_path = os.path.join(save_root, data.file_name)
-                    print(data.length)
-                    while len(file_data) < data.length:
-                        file_data += conn.recv(1024)
-                        print(len(file_data))
-                    # cache the file
-                    with open(save_path, "wb") as file:
-                        file.write(file_data)
+                self.deal_with_file(conn, data)
             elif isinstance(data, utils.Request):
                 if data.request == "get_user_list":
                     user_list = []
@@ -116,12 +100,65 @@ class Server:
                     socket_send(conn, utils.Request("get_user_list", user_list))
             else:
                 conn.send(pickle.dumps(utils.SysWarning("Invalid request!")))
+            
+    def deal_with_file(self, conn, data):
+        assert isinstance(data, utils.File), "data is of the wrong type"
+
+        if data.ask_for_download:
+            file_path = os.path.join(os.getcwd(), "FileCache", data.ufrom, data.uto, data.file_name)
+            if not os.path.exists(file_path):
+                socket_send(conn, utils.SysWarning("File not found!"))
+                return
+            # open a new port for file transfer
+            new_port = utils.get_free_port()
+            # wait for client to connect
+            file_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            file_socket.bind((self.HOST, new_port))
+            file_socket.listen(1)
+            # inform the client for the new port 
+            socket_send(conn, utils.Request("file_port", new_port))
+            file_download_thread = threading.Thread(target=self.file_download_handler, args=(file_socket, file_path, data.length))
+            file_download_thread.start()
+            return
+
+        if data.uto in self.clients_meta.keys():
+            # inform that there is file incoming
+            # socket_send(self.clients_meta[data.uto][1], data.file_name)
+            # receive file
+            file_data = b''
+            save_root = os.path.join(os.getcwd(), "FileCache", data.ufrom, data.uto)
+            if not os.path.exists(save_root):
+                os.makedirs(save_root)
+            save_path = os.path.join(save_root, data.file_name)
+            while len(file_data) < data.length:
+                file_data += conn.recv(1024)
+            print(f"File received: {data.file_name} with total bytes: {len(file_data)}")
+            # cache the file
+            with open(save_path, "wb") as file:
+                file.write(file_data)
+            socket_send(self.clients_meta[data.uto]["conn"], utils.File(data.uto, data.ufrom, data.time, data.file_name, data.length, False))
+            print("Notification Sent")
+
+    def file_download_handler(self, file_socket, file_path, file_size):
+        conn, addr = file_socket.accept()
+        with open(file_path, "rb") as file:
+            bytes_sent = 0
+            while bytes_sent < file_size:
+                file_data = file.read(1024)
+                if not file_data:
+                    break
+                conn.sendall(file_data)
+                bytes_sent += len(file_data)
+        print("File sent")
+        conn.close()
+        file_socket.close()
                                    
 def socket_send(conn, data):
     try:
         conn.send(pickle.dumps(data))
     except Exception as e:
         print(e)
+
             
 if __name__ == "__main__":
     server = Server()
