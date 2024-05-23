@@ -21,23 +21,27 @@ class MainScreen(Screen):
         self.client_manager = manager
         self.user_list = []
         self.list_is_changed = True
+        # self.get_user_list(None)
 
     def on_enter(self):
         self.layout = BoxLayout(orientation='vertical', spacing=-100, padding=[0, -70, 0, 70])
+        # 显示在线名单
+        # if self.list_is_changed:
+        #     for user in self.user_list:
+        #         user_box = BoxLayout(orientation='horizontal', size_hint=(0.5, 0.03), pos_hint={'center_x': 0.5}, spacing=20)
+        #         user_botton = Button(text=user, size_hint=(0.3, 1), pos_hint={'center_x': 0.5})
+        #         # user_botton.bind(on_press=lambda x: self.do_go())
+        #         user_box.add_widget(user_botton)
+
+        #         self.layout.add_widget(user_box)
+
+        self.get_user_list(None)
         # 查询在线名单
         self.clock_event = Clock.schedule_interval(self.get_user_list, 1)
 
-        # 显示在线名单
-        if self.list_is_changed:
-            for user in self.user_list:
-                user_box = BoxLayout(orientation='horizontal', size_hint=(0.5, 0.03), pos_hint={'center_x': 0.5}, spacing=20)
-                user_botton = Button(text=user, size_hint=(0.3, 1), pos_hint={'center_x': 0.5})
-                # user_botton.bind(on_press=lambda x: self.do_go())
-                user_box.add_widget(user_botton)
-
-                self.layout.add_widget(user_box)
-
-        self.add_widget(self.layout)
+        if self.layout.parent:
+            self.layout.parent.remove_widget(self.layout)
+            self.add_widget(self.layout)
 
     def get_user_list(self, dt):
         user_list = self.client_manager.get_user_list_api()
@@ -52,10 +56,14 @@ class MainScreen(Screen):
             self.list_is_changed = True
         else:
             self.list_is_changed = False
+        print('user_list: ', user_list)
+        print('self.user_list: ', self.user_list)
+        print('self.list_is_changed: ', self.list_is_changed)
 
         self.show_user_list()
 
     def show_user_list(self):
+        print('show_user_list')
         # 显示在线名单
         if self.list_is_changed:
             self.layout.clear_widgets()
@@ -98,6 +106,10 @@ class MainScreen(Screen):
         chat_screen.chat_with = user
         # 跳转到 ChatScreen
         App.get_running_app().root.current = 'chat'
+
+    def on_leave(self):
+        Clock.unschedule(self.clock_event)
+        self.clock_event = None
 
     def do_exit(self):
         Clock.unschedule(self.clock_event)
