@@ -29,3 +29,6 @@ class ClientManager:
 
     def sign_out_api(self) -> None:
         self.out_queue.put(("sign_out",))
+
+    def download_file_api(self, target, file_path) -> None:
+        self.out_queue.put(("download_file", target, file_path))
