@@ -62,6 +62,9 @@ class Client:
 
         while not auth_success:
             item = self.in_queue.get()
+            if item[0] == "xx":
+                self.csock.send(pickle.dumps(utils.closeConnection(is_abrupt=True)))
+                exit(0)
             if item[0] != "sign":
                 continue
             _, is_in, username, password = item
@@ -94,8 +97,8 @@ class Client:
                 if package[2][0] == "message":
                     self.send_message(package) 
             elif option[0] == "xx":
+                print("xx")
                 self.csock.send(pickle.dumps(utils.closeConnection(is_abrupt=True)))
-                self.csock.close()
                 exit(0)
             elif option[0] == "sign_out":
                 self.csock.send(pickle.dumps(utils.closeConnection(is_abrupt=False)))
@@ -174,6 +177,9 @@ def recv_handler(csock, buffer, recv_queue):
             # handle_image()
             print("A file is sent to you from ", data.ufrom)
         elif isinstance(data, utils.closeConnection):
+            print("recv close")
+            if data.is_abrupt:
+                csock.close()
             exit(0)
 
     
