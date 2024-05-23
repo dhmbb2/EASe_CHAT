@@ -70,12 +70,8 @@ class ChatScreen(Screen):
 
         # 显示输入框
         self.input_box = BoxLayout(orientation='horizontal', size_hint=(1, 0.175), spacing=0)
-        # 下载文件按钮
-        self.send_message_button = Button(text='Download', size_hint=(0.1, 1), pos_hint={'center_x': 0.5}, color=word_color, font_name=word_font, font_size=25)
-        self.send_message_button.bind(on_press=lambda x: self.do_get_file())
-        self.input_box.add_widget(self.send_message_button)
 
-        self.input = MyTextInput(multiline=False, size_hint=(0.7, 1), pos_hint={'center_x': 0.5}, font_name=word_font)
+        self.input = MyTextInput(multiline=False, size_hint=(0.8, 1), pos_hint={'center_x': 0.5}, font_name=word_font)
         self.input.background_color = textbox_color
         self.input.foreground_color = input_word_color
         self.input.bind(on_text_validate=self.do_send_message)
