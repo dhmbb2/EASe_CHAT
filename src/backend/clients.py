@@ -6,7 +6,6 @@ import os
 from queue import Queue
 import json
 
-MessageCache_root = "MessageCache"
 FileCache_root = "UserFileCache"
 
 class MessageBuffer:
@@ -159,7 +158,7 @@ class Client:
 
     def download_file(self, target, old_file_path):
         _, file_name = os.path.split(old_file_path)
-        file_root = os.path.join(MessageCache_root, self.username, target)
+        file_root = os.path.join(FileCache_root, self.username, target)
         if not os.path.exists(file_root):
             os.makedirs(file_root)
         file_path = os.path.join(file_root, file_name)

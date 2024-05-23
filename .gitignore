@@ -8,3 +8,4 @@ src/frontend/__pycache__/
 src/test.py
 FileCache/
 MessageCache/
+UserFileCache/
