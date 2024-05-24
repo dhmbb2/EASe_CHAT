@@ -110,22 +110,31 @@ class ChatScreen(Screen):
                 # item = ('file', 'test.txt', True)
                 if item[0] == 'message':
                     if user == self.user_chat_with:
-                        message = Label(text=f'({time}) {user}: {item[1]}', halign='left', font_size=25, color=word_color, font_name=word_font, size_hint=(1, None), height=50)
-                        message.bind(width=lambda s, w: s.setter('text_size')(s, (w, None)))
-                        self.history_box.add_widget(message)
+                        org_text = f'({time}) {user}: {item[1]}'
+                        texts = [org_text[i:i+85] for i in range(0, len(org_text), 85)]
+                        for text in texts:
+                            message = Label(text=text, halign='left', font_size=25, color=word_color, font_name=word_font, size_hint=(1, None), height=50)
+                            message.bind(width=lambda s, w: s.setter('text_size')(s, (w, None)))
+                            self.history_box.add_widget(message)
                         # self.history.append(f'({time}) {user}: {item[1]}')
                     else:
-                        message = Label(text=f'({time}) You: {item[1]}', halign='left', font_size=25, color=my_word_color, font_name=word_font, size_hint=(1, None), height=50)
-                        message.bind(width=lambda s, w: s.setter('text_size')(s, (w, None)))
-                        self.history_box.add_widget(message)
+                        org_text = f'({time}) You: {item[1]}'
+                        texts = [org_text[i:i+85] for i in range(0, len(org_text), 85)]
+                        for text in texts:
+                            message = Label(text=text, halign='left', font_size=25, color=my_word_color, font_name=word_font, size_hint=(1, None), height=50)
+                            message.bind(width=lambda s, w: s.setter('text_size')(s, (w, None)))
+                            self.history_box.add_widget(message)
                         # self.history.append(f'({time}) {user}: {item[1]}')
                 elif item[0] == 'file':
                     # self.history.append(f'({time}) {user}: [file] {item[1]}')
                     file_box = BoxLayout(orientation='horizontal', size_hint=(1, None), height=50)
                     if user == self.user_chat_with:
-                        text = Label(text=f'({time}) {user}: [file] {item[1]}', halign='left', font_size=25, color=word_color, font_name=word_font, size_hint=(0.85, None), height=50)
-                        text.bind(width=lambda s, w: s.setter('text_size')(s, (w, None)))
-                        file_box.add_widget(text)
+                        org_text = f'({time}) {user}: [file] {item[1]}'
+                        texts = [org_text[i:i+85] for i in range(0, len(org_text), 85)]
+                        for text in texts:
+                            message = Label(text=text, halign='left', font_size=25, color=word_color, font_name=word_font, size_hint=(0.85, None), height=50)
+                            message.bind(width=lambda s, w: s.setter('text_size')(s, (w, None)))
+                            file_box.add_widget(message)
                         if type(item[2]) == str:
                             # download_button = Button(text='Download', size_hint=(0.15, 1), color=word_color, font_name=word_font, font_size=25)
                             # download_button.bind(on_press=lambda x: self.do_get_file(item[1]))
@@ -140,9 +149,12 @@ class ChatScreen(Screen):
                             file_box.add_widget(Label(text='Downloaded', halign='left', font_size=25, color=word_color, font_name=word_font, size_hint=(0.15, None), height=50))
                         self.history_box.add_widget(file_box)
                     else:
-                        text = Label(text=f'({time}) You: [file] {item[1]}', halign='left', font_size=25, color=my_word_color, font_name=word_font, size_hint=(0.85, None), height=50)
-                        text.bind(width=lambda s, w: s.setter('text_size')(s, (w, None)))
-                        file_box.add_widget(text)
+                        org_text = f'({time}) You: [file] {item[1]}'
+                        texts = [org_text[i:i+85] for i in range(0, len(org_text), 85)]
+                        for text in texts:
+                            message = Label(text=f'({time}) You: [file] {item[1]}', halign='left', font_size=25, color=my_word_color, font_name=word_font, size_hint=(0.85, None), height=50)
+                            message.bind(width=lambda s, w: s.setter('text_size')(s, (w, None)))
+                            file_box.add_widget(message)
                         if type(item[2]) == str:
                             # download_button = Button(text='Download', size_hint=(0.15, 1), color=word_color, font_name=word_font, font_size=25)
                             # download_button.bind(on_press=lambda x: self.do_get_file(item[1]))
