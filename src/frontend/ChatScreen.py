@@ -22,8 +22,13 @@ my_word_background_color = word_color
 textbox_color = hex_to_rgb('#CACACA')
 input_word_color = hex_to_rgb('#282828')
 
-title_font = 'src/fonts/AcademyEngravedStd.otf'
-word_font = 'src/fonts/Consolas.ttf'
+yzq = 'src/fonts/FZYanZQKSJF.TTF'
+sjt = 'src/fonts/FZZhaoJSJSJF.TTF'
+skt = 'src/fonts/ZKTShiKTJW.TTF'
+AES = 'src/fonts/AcademyEngravedStd.otf'
+Consolas = 'src/fonts/Consolas.ttf'
+title_font = skt
+word_font = yzq
 
 class ChatScreen(Screen):
     chat_with = StringProperty()

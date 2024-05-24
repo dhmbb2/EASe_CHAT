@@ -12,8 +12,13 @@ from frontend.utils import *
 
 word_color = hex_to_rgb('#CCCCCC')
 
-title_font = 'src/fonts/AcademyEngravedStd.otf'
-word_font = 'src/fonts/Consolas.ttf'
+yzq = 'src/fonts/FZYanZQKSJF.TTF'
+sjt = 'src/fonts/FZZhaoJSJSJF.TTF'
+skt = 'src/fonts/ZKTShiKTJW.TTF'
+AES = 'src/fonts/AcademyEngravedStd.otf'
+Consolas = 'src/fonts/Consolas.ttf'
+title_font = skt
+word_font = yzq
 
 class MainScreen(Screen):
     def __init__(self, manager, **kwargs):
