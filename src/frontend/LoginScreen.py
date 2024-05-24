@@ -13,26 +13,27 @@ word_color = hex_to_rgb('#CCCCCC')
 textbox_color = hex_to_rgb('#CACACA')
 input_word_color = hex_to_rgb('#282828')
 
-yzq = 'src/fonts/FZYanZQKSJF.TTF'
-sjt = 'src/fonts/FZZhaoJSJSJF.TTF'
-skt = 'src/fonts/ZKTShiKTJW.TTF'
-AES = 'src/fonts/AcademyEngravedStd.otf'
-Consolas = 'src/fonts/Consolas.ttf'
-title_font = skt
-word_font = yzq
+
+mct = 'src/fonts/FZFWZhuZGDSMCJW.TTF'
+NotoSans = 'src/fonts/NotoSansCJKsc-Medium.otf'
+NotoSeri = 'src/fonts/NotoSerifCJKsc-Medium.otf'
+title_font = mct
+word_font = mct
 
 class LoginScreen(Screen):
-    def __init__(self, manager, **kwargs):
+
+    def __init__(self, my_name, manager, **kwargs):
         super(LoginScreen, self).__init__(**kwargs)
         self.client_manager = manager
+        self.my_name = my_name
 
     def on_enter(self):
         layout = BoxLayout(orientation='vertical', spacing=20, padding=[0, 100, 0, 150])
         # 标题
         self.title_box= BoxLayout(orientation='vertical', size_hint=(1, 0.2), spacing=-100)
         self.title_box.add_widget(Label(text='Welcome to EASEchat', font_size=70, pos_hint={'center_x': 0.5}, color=word_color, font_name=title_font))
-        layout.add_widget(self.title_box)
         self.title_box.add_widget(Label(text='Efficient And SEcure chat', font_size=30, pos_hint={'center_x': 0.5}, color=word_color, font_name=title_font))
+        layout.add_widget(self.title_box)
 
         # 选择登录/注册
         self.is_in = True
@@ -94,20 +95,20 @@ class LoginScreen(Screen):
 
     def do_go(self, instance=None):
         if self.username.text == '' or self.password.text == '':
-            popup = Popup(title='Error', content=Label(text='Please enter your username and password.', text_size=(300, None), font_name=word_font), size=(400, 200), size_hint=(None, None), title_font=word_font)
+            popup = Popup(title='Error', content=Label(text='Please enter your username and password.', text_size=(300, None), font_name=word_font, font_size=25), size=(400, 200), size_hint=(None, None), title_font=word_font)
             popup.open()
         else:
             is_success, word = self.client_manager.sign_api(is_in=self.is_in, user_name=self.username.text, password=self.password.text)
-            print(is_success)
             # is_success, word = True, 'Success' # 注释这一行
             if is_success:
-                popup = Popup(title='Success', content=Label(text=word, text_size=(300, None), font_name=word_font), size=(400, 200), size_hint=(None, None), title_font=word_font)
+                self.my_name[0] = self.username.text
+                popup = Popup(title='Success', content=Label(text=word, text_size=(300, None), font_name=word_font, font_size=25), size=(400, 200), size_hint=(None, None), title_font=word_font)
                 popup.open()
                 popup.bind(on_dismiss=lambda x: self.go_to_main())
                 self.username.text = ''
                 self.password.text = ''
             else:
-                popup = Popup(title='Error', content=Label(text=word, text_size=(300, None), font_name=word_font), size=(400, 200), size_hint=(None, None), title_font=word_font)
+                popup = Popup(title='Error', content=Label(text=word, text_size=(300, None), font_name=word_font, font_size=25), size=(400, 200), size_hint=(None, None), title_font=word_font)
                 popup.open()
 
     def go_to_main(self):

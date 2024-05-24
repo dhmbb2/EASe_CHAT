@@ -22,21 +22,20 @@ my_word_background_color = word_color
 textbox_color = hex_to_rgb('#CACACA')
 input_word_color = hex_to_rgb('#282828')
 
-yzq = 'src/fonts/FZYanZQKSJF.TTF'
-sjt = 'src/fonts/FZZhaoJSJSJF.TTF'
-skt = 'src/fonts/ZKTShiKTJW.TTF'
-AES = 'src/fonts/AcademyEngravedStd.otf'
-Consolas = 'src/fonts/Consolas.ttf'
-title_font = skt
-word_font = yzq
+mct = 'src/fonts/FZFWZhuZGDSMCJW.TTF'
+NotoSans = 'src/fonts/NotoSansCJKsc-Medium.otf'
+NotoSeri = 'src/fonts/NotoSerifCJKsc-Medium.otf'
+title_font = mct
+word_font = mct
 
 class ChatScreen(Screen):
     chat_with = StringProperty()
     user_chat_with = None
 
-    def __init__(self, manager, **kwargs):
+    def __init__(self, my_name, manager, **kwargs):
         super(ChatScreen, self).__init__(**kwargs)
         self.client_manager = manager
+        self.my_name = my_name
         self.old_packages = []
 
     def on_enter(self):
@@ -63,9 +62,8 @@ class ChatScreen(Screen):
         # 显示输入框
         self.input_box = BoxLayout(orientation='horizontal', size_hint=(1, 0.175), spacing=0)
 
-        self.input = MyTextInput(multiline=False, size_hint=(0.8, 1), pos_hint={'center_x': 0.5}, font_name=word_font)
-        self.input.background_color = textbox_color
-        self.input.foreground_color = input_word_color
+        self.input = WrapTextInput(self, background_color=textbox_color, word_color=input_word_color, font_size=25, font_name=word_font)
+        self.input.on_text_validate = self.do_send_message  # 当 WrapTextInput 的 on_text_validate 事件被触发时，调用 do_send_mess
         self.input.bind(on_text_validate=self.do_send_message)
         self.input_box.add_widget(self.input)
         # 按钮
@@ -115,36 +113,30 @@ class ChatScreen(Screen):
                 # item = ('file', 'test.txt', True)
                 if item[0] == 'message':
                     if user == self.user_chat_with:
-                        org_text = f'({time}) {user}: {item[1]}'
-                        texts = [org_text[i:i+85] for i in range(0, len(org_text), 85)]
-                        for text in texts:
-                            message = Label(text=text, halign='left', font_size=25, color=word_color, font_name=word_font, size_hint=(1, None), height=50)
-                            message.bind(width=lambda s, w: s.setter('text_size')(s, (w, None)))
-                            self.history_box.add_widget(message)
+                        text = f'({time}) {user}:\n{item[1]}'
+                        message = Label(text=text, halign='left', font_size=25, color=word_color, font_name=word_font, size_hint=(1, None))
+                        message.bind(texture_size=message.setter('size'), width=lambda s, w: s.setter('text_size')(s, (w, None)))
+                        self.history_box.add_widget(message)
                         # self.history.append(f'({time}) {user}: {item[1]}')
                     else:
-                        org_text = f'({time}) You: {item[1]}'
-                        texts = [org_text[i:i+85] for i in range(0, len(org_text), 85)]
-                        for text in texts:
-                            message = Label(text=text, halign='left', font_size=25, color=my_word_color, font_name=word_font, size_hint=(1, None), height=50)
-                            message.bind(width=lambda s, w: s.setter('text_size')(s, (w, None)))
-                            self.history_box.add_widget(message)
+                        text = f'({time}) {self.my_name[0]}:\n{item[1]}'
+                        message = Label(text=text, halign='left', font_size=25, color=my_word_color, font_name=word_font, size_hint=(1, None))
+                        message.bind(texture_size=message.setter('size'), width=lambda s, w: s.setter('text_size')(s, (w, None)))
+                        self.history_box.add_widget(message)
                         # self.history.append(f'({time}) {user}: {item[1]}')
                 elif item[0] == 'file':
                     # self.history.append(f'({time}) {user}: [file] {item[1]}')
                     file_box = BoxLayout(orientation='horizontal', size_hint=(1, None), height=50)
                     if user == self.user_chat_with:
-                        org_text = f'({time}) {user}: [file] {item[1]}'
-                        texts = [org_text[i:i+85] for i in range(0, len(org_text), 85)]
-                        for text in texts:
-                            message = Label(text=text, halign='left', font_size=25, color=word_color, font_name=word_font, size_hint=(0.85, None), height=50)
-                            message.bind(width=lambda s, w: s.setter('text_size')(s, (w, None)))
-                            file_box.add_widget(message)
+                        text = f'({time}) {user}: [file] {item[1]}'
+                        message = Label(text=text, halign='left', font_size=25, color=word_color, font_name=word_font, size_hint=(0.85, None))
+                        message.bind(texture_size=message.setter('size'), width=lambda s, w: s.setter('text_size')(s, (w, None)))
+                        file_box.add_widget(message)
                         if type(item[2]) == str:
                             # download_button = Button(text='Download', size_hint=(0.15, 1), color=word_color, font_name=word_font, font_size=25)
                             # download_button.bind(on_press=lambda x: self.do_get_file(item[1]))
                             # file_box.add_widget(download_button)
-                            popup = Popup(title='Download warning', content=Label(text=item[2], font_size=25, color=word_color, font_name=word_font), size=(400, 200), size_hint=(None, None), title_font=word_font)
+                            popup = Popup(title='Download warning', content=Label(text=item[2], color=word_color, font_name=word_font, font_size=25), size=(400, 200), size_hint=(None, None), title_font=word_font)
                             popup.open()
                         elif item[2]:
                             download_button = Button(text='Download', size_hint=(0.15, 1), color=word_color, font_name=word_font, font_size=25)
@@ -154,17 +146,15 @@ class ChatScreen(Screen):
                             file_box.add_widget(Label(text='Downloaded', halign='left', font_size=25, color=word_color, font_name=word_font, size_hint=(0.15, None), height=50))
                         self.history_box.add_widget(file_box)
                     else:
-                        org_text = f'({time}) You: [file] {item[1]}'
-                        texts = [org_text[i:i+85] for i in range(0, len(org_text), 85)]
-                        for text in texts:
-                            message = Label(text=f'({time}) You: [file] {item[1]}', halign='left', font_size=25, color=my_word_color, font_name=word_font, size_hint=(0.85, None), height=50)
-                            message.bind(width=lambda s, w: s.setter('text_size')(s, (w, None)))
-                            file_box.add_widget(message)
+                        text = f'({time}) {self.my_name[0]}: [file] {item[1]}'
+                        message = Label(text=text, halign='left', font_size=25, color=my_word_color, font_name=word_font, size_hint=(0.85, None))
+                        message.bind(texture_size=message.setter('size'), width=lambda s, w: s.setter('text_size')(s, (w, None)))
+                        file_box.add_widget(message)
                         if type(item[2]) == str:
                             # download_button = Button(text='Download', size_hint=(0.15, 1), color=word_color, font_name=word_font, font_size=25)
                             # download_button.bind(on_press=lambda x: self.do_get_file(item[1]))
                             # file_box.add_widget(download_button)
-                            popup = Popup(title='Download warning', content=Label(text=item[2], font_size=25, color=word_color, font_name=word_font), size=(400, 200), size_hint=(None, None), title_font=word_font)
+                            popup = Popup(title='Download warning', content=Label(text=item[2], color=word_color, font_name=word_font, font_size=25), size=(400, 200), size_hint=(None, None), title_font=word_font)
                             popup.open()
                         elif item[2]:
                             download_button = Button(text='Download', size_hint=(0.15, 1), color=word_color, font_name=word_font, font_size=25)
@@ -177,20 +167,20 @@ class ChatScreen(Screen):
 
         # self.load_history()
 
-    def do_send_message(self, instance):
+    def do_send_message(self, instance=None):
         # 注释掉下一段
-        # new_message = f'({get_time()}) You: {self.input.plain_text}'
+        # new_message = f'({get_time()}) You: {self.input.text}'
         # new_message = textwrap.fill(new_message, 90)
         # self.history.append(new_message)
         # self.load_history()
 
-        item = ('message', self.input.plain_text, False)
+        item = ('message', self.input.text_input.text, False)
         package = (self.user_chat_with, get_time(), item)
         self.client_manager.send_message_api(package)
 
         # 清空输入框
         self.input.text = ''
-        self.input.plain_text = ''
+        self.input.text_input.text = ''
 
     def do_send_file(self, instance):
         # 创建一个 FileChooser 控件

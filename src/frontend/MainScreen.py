@@ -12,18 +12,17 @@ from frontend.utils import *
 
 word_color = hex_to_rgb('#CCCCCC')
 
-yzq = 'src/fonts/FZYanZQKSJF.TTF'
-sjt = 'src/fonts/FZZhaoJSJSJF.TTF'
-skt = 'src/fonts/ZKTShiKTJW.TTF'
-AES = 'src/fonts/AcademyEngravedStd.otf'
-Consolas = 'src/fonts/Consolas.ttf'
-title_font = skt
-word_font = yzq
+mct = 'src/fonts/FZFWZhuZGDSMCJW.TTF'
+NotoSans = 'src/fonts/NotoSansCJKsc-Medium.otf'
+NotoSeri = 'src/fonts/NotoSerifCJKsc-Medium.otf'
+title_font = mct
+word_font = mct
 
 class MainScreen(Screen):
-    def __init__(self, manager, **kwargs):
+    def __init__(self, my_name, manager, **kwargs):
         super(MainScreen, self).__init__(**kwargs)
         self.client_manager = manager
+        self.my_name = my_name
         self.user_list = []
         self.list_is_changed = True
         # self.get_user_list(None)

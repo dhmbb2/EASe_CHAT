@@ -5,6 +5,10 @@ from kivy.uix.label import Label
 from kivy.graphics import Color, RoundedRectangle, StencilPush, StencilUse, StencilUnUse
 from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
+from kivy.core.text import Label as CoreLabel
+from kivy.properties import StringProperty
+from kivy.uix.relativelayout import RelativeLayout
+from kivy.core.window import Window
 
 
 def hex_to_rgb(hex_color, alpha=1.0):
@@ -29,29 +33,33 @@ class ColoredRoundedLabel(BoxLayout):
         self.rect.pos = instance.pos
         self.rect.size = instance.size
 
-class MyTextInput(TextInput):
-    MAX_LINE_LENGTH = 79  # 每行最多的字符数
+class WrapTextInput(RelativeLayout):
+    plain_text = StringProperty('')
 
-    def __init__(self, **kwargs):
-        super(MyTextInput, self).__init__(**kwargs)
-        self.plain_text = ''
+    def __init__(self, screen, background_color, word_color, font_size, font_name, **kwargs):
+        super(WrapTextInput, self).__init__(**kwargs)
+        Window.bind(on_key_down=self._on_key_down)
+        self.screen = screen
+        self.text_input = TextInput(multiline=True, size_hint=(1, 1), background_color=background_color, cursor_color=word_color, font_size=font_size, font_name=font_name)
+        # self.text_input.bind(on_text_validate=self._on_text_validate)
+        self.label = Label(size_hint=(1, 1), text=self.text_input.text, color=word_color, valign='bottom', halign='left', font_size=font_size, font_name=font_name)
+        self.label.bind(size=self.label.setter('text_size'))
+        self.text_input.bind(text=self.label.setter('text'))
+        self.text = self.text_input.text
+        self.add_widget(self.label)
+        self.add_widget(self.text_input)
 
-    def insert_text(self, substring, from_undo=False):
-        lines = self.text.split('\n')
-        if len(lines[-1]) + len(substring) > self.MAX_LINE_LENGTH:
-            substring = '\n' + substring
-        self.plain_text += substring.replace('\n', '')
-        return super(MyTextInput, self).insert_text(substring, from_undo=from_undo)
-    
-    def do_backspace(self, from_undo=False, mode='bkspc'):
-        # 获取删除前的文本长度
-        old_length = len(self.plain_text)
-        # 调用父类的 do_backspace 方法
-        super(MyTextInput, self).do_backspace(from_undo=from_undo, mode=mode)
-        # 计算删除的字符数
-        num_deleted = old_length - len(self.text)
-        # 更新 self.plain_text
-        self.plain_text = self.plain_text[:-num_deleted]
+    def on_text(self, instance, value):
+        self.plain_text = value
+        self.label.text = value
+        self.text_input.text = value
+
+    def _on_key_down(self, instance, keyboard, keycode, text, modifiers):
+        if keyboard == 13 and 'ctrl' in modifiers:
+            print('Ctrl+Enter')
+            self.screen.do_send_message()
+            return True
+        # 在这里添加你想要执行的操作
 
 class MyApp(App):
     def build(self):
