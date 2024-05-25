@@ -18,12 +18,13 @@ class CHAT(App):
         Window.clearcolor = hex_to_rgb('#282828')
         self.manager = ClientManager(HOST = "127.0.0.1",PORT = 11451)
         self.my_name = ['You-Know-Who']
+        self.language_version = ['zh']
         # self.manager = None
         Window.bind(on_resize=self.on_window_resize)
         wm = WindowManager()
-        wm.add_widget(LoginScreen(self.my_name, self.manager, name='login'))
-        wm.add_widget(MainScreen(self.my_name, self.manager, name='main'))
-        wm.add_widget(ChatScreen(self.my_name, self.manager, name='chat'))
+        wm.add_widget(LoginScreen(self.my_name, self.manager, self.language_version, name='login'))
+        wm.add_widget(MainScreen(self.my_name, self.manager, self.language_version, name='main'))
+        wm.add_widget(ChatScreen(self.my_name, self.manager, self.language_version, name='chat'))
         return wm
     
     def on_window_resize(self, window, width, height):

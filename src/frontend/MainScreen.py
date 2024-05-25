@@ -12,40 +12,51 @@ from frontend.utils import *
 
 word_color = hex_to_rgb('#CCCCCC')
 
-mct = 'src/fonts/FZFWZhuZGDSMCJW.TTF'
-NotoSans = 'src/fonts/NotoSansCJKsc-Medium.otf'
-NotoSeri = 'src/fonts/NotoSerifCJKsc-Medium.otf'
-title_font = mct
-word_font = mct
+title_font = 'src/fonts/FZFWZhuZGDSMCJW.TTF'
+word_font = 'src/fonts/FZFWZhuZGDSMCJW.TTF'
+
+zh_texts = {
+    'title': '和你的好友聊天吧！',
+    'sign out': '退出登录',
+}
+
+en_texts = {
+    'title': 'Start CHAT to your friends!',
+    'sign out': 'Sign out',
+}
 
 class MainScreen(Screen):
-    def __init__(self, my_name, manager, **kwargs):
+    def __init__(self, my_name, manager, language, **kwargs):
         super(MainScreen, self).__init__(**kwargs)
         self.client_manager = manager
         self.my_name = my_name
+        self.language_version = language
         self.user_list = []
         self.list_is_changed = True
+        self.layout = BoxLayout(orientation='vertical', spacing=-100, padding=[0, -70, 0, 70])
+        self.add_widget(self.layout)
+        self.old_language = []
+        self.language_is_changed = True
         # self.get_user_list(None)
 
     def on_enter(self):
-        self.layout = BoxLayout(orientation='vertical', spacing=-100, padding=[0, -70, 0, 70])
-        # 显示在线名单
-        # if self.list_is_changed:
-        #     for user in self.user_list:
-        #         user_box = BoxLayout(orientation='horizontal', size_hint=(0.5, 0.03), pos_hint={'center_x': 0.5}, spacing=20)
-        #         user_botton = Button(text=user, size_hint=(0.3, 1), pos_hint={'center_x': 0.5})
-        #         # user_botton.bind(on_press=lambda x: self.do_go())
-        #         user_box.add_widget(user_botton)
+        # self.layout.clear_widgets()
+        if self.language_version[0] == 'zh':
+            self.texts = zh_texts
+        else:
+            self.texts = en_texts
 
-        #         self.layout.add_widget(user_box)
+        if self.old_language != self.language_version:
+            self.old_language = self.language_version.copy()
+            self.language_is_changed = True
+        else:
+            self.language_is_changed = False
 
+        # self.layout.add_widget(Button(text=datetime.now().strftime('%Y-%m-%d %H:%M:%S'), size_hint=(1, 0.2), color=word_color, font_name=word_font, font_size=25))
+        
         self.get_user_list(None)
-        # 查询在线名单
-        self.clock_event = Clock.schedule_interval(self.get_user_list, 1)
-
-        if self.layout.parent:
-            self.layout.parent.remove_widget(self.layout)
-            self.add_widget(self.layout)
+        # # 查询在线名单
+        self.clock_event = Clock.schedule_interval(self.get_user_list, 0.1)
 
     def get_user_list(self, dt):
         user_list = self.client_manager.get_user_list_api()
@@ -60,21 +71,16 @@ class MainScreen(Screen):
             self.list_is_changed = True
         else:
             self.list_is_changed = False
-        print('user_list: ', user_list)
-        print('self.user_list: ', self.user_list)
-        print('self.list_is_changed: ', self.list_is_changed)
 
-        self.show_user_list()
-
-    def show_user_list(self):
-        print('show_user_list')
         # 显示在线名单
-        if self.list_is_changed:
+        if self.list_is_changed or self.language_is_changed:
+            self.language_is_changed = False
+        # if True:
             self.layout.clear_widgets()
             # 显示标题
             title_box = BoxLayout(orientation='horizontal', size_hint=(1, 0.3))
-            title_box.add_widget(Label(text='Start CHAT to your friends!', font_size=50, pos_hint={'center_x': 0.5}, color=word_color, font_name=title_font, size_hint=(0.8, 1)))
-            exit_button = Button(font_size=30, text='Sign out', size_hint=(0.2, 1), background_normal='', background_color=[0,0,0,0], font_name=title_font, color=word_color)
+            title_box.add_widget(Label(text=self.texts['title'], font_size=50, pos_hint={'center_x': 0.5}, color=word_color, font_name=title_font, size_hint=(0.8, 1)))
+            exit_button = Button(font_size=30, text=self.texts['sign out'], size_hint=(0.2, 1), background_normal='', background_color=[0,0,0,0], font_name=title_font, color=word_color)
             exit_button.bind(on_press=lambda x: self.do_exit())
             title_box.add_widget(exit_button)
             self.layout.add_widget(title_box)
@@ -100,9 +106,6 @@ class MainScreen(Screen):
             scroll_view.add_widget(user_box)
             self.layout.add_widget(scroll_view)
 
-            if self.layout.parent:
-                self.layout.parent.remove_widget(self.layout)
-            self.add_widget(self.layout)
 
     def do_chat(self, user):
         # 获取 ChatScreen 实例并设置 chat_with 属性

@@ -56,7 +56,6 @@ class WrapTextInput(RelativeLayout):
 
     def _on_key_down(self, instance, keyboard, keycode, text, modifiers):
         if keyboard == 13 and 'ctrl' in modifiers:
-            print('Ctrl+Enter')
             self.screen.do_send_message()
             return True
         # 在这里添加你想要执行的操作
