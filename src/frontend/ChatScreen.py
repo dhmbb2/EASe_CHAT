@@ -95,6 +95,23 @@ class ChatScreen(Screen):
         self.input_box = BoxLayout(orientation='horizontal', size_hint=(1, 0.175), spacing=0)
         self.layout.add_widget(self.input_box)
 
+        # 输入框
+        self.input = WrapTextInput(self, background_color=textbox_color, word_color=input_word_color, font_size=25, font_name=word_font)
+        self.input.on_text_validate = self.do_send_message  # 当 WrapTextInput 的 on_text_validate 事件被触发时，调用 do_send_mess
+        self.input.bind(on_text_validate=self.do_send_message)
+        self.input_box.add_widget(self.input)
+        # 按钮
+        self.button = BoxLayout(orientation='vertical', size_hint=(0.2, 1), spacing=0)
+        # 发送消息按钮
+        self.send_message_button = Button(text=self.texts['message'], size_hint=(1, 0.5), pos_hint={'center_x': 0.5}, color=word_color, font_name=word_font, font_size=25)
+        self.send_message_button.bind(on_press=self.do_send_message)
+        self.button.add_widget(self.send_message_button)
+        # 发送文件按钮
+        self.send_message_button = Button(text=self.texts['file'], size_hint=(1, 0.5), pos_hint={'center_x': 0.5}, color=word_color, font_name=word_font, font_size=25)
+        self.send_message_button.bind(on_press=self.do_send_file)
+        self.button.add_widget(self.send_message_button)
+        self.input_box.add_widget(self.button)
+
         # 加载历史信息
         # 注释掉下一段
         # self.history = [' '*90, 'You: Hello', f'{self.user_chat_with}: Hi', 'You: How are you?', f'{self.user_chat_with}: Fine, thank you. And you?', 'You: I am fine too. Thank you.', f'{self.user_chat_with}: Bye', 'You: Bye']
