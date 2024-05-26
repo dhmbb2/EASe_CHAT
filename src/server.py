@@ -116,8 +116,9 @@ class Server:
             file_socket.bind((self.HOST, new_port))
             file_socket.listen(1)
             # inform the client for the new port 
-            socket_send(conn, utils.Request("file_port", new_port))
-            file_download_thread = threading.Thread(target=self.file_download_handler, args=(file_socket, file_path, data.length))
+            file_size = os.path.getsize(file_path)
+            socket_send(conn, utils.Request("file_port", (new_port, file_size)))
+            file_download_thread = threading.Thread(target=self.file_download_handler, args=(file_socket, file_path, file_size))
             file_download_thread.start()
             return
 

@@ -171,16 +171,16 @@ class Client:
         # you will get another port number for file transfer
         self.csock.send(pickle.dumps(utils.File(self.username, target, 0, file_name, 0, ask_for_download=True)))
         # corresponding logic is implemented in recv handler, 
-        port_num = self.recv_queue.get()
+        port_num, file_size = self.recv_queue.get()
         file_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         file_socket.connect((self.HOST, port_num))
-        file_download_thread = threading.Thread(target=self.file_download_handler, args=(target, file_socket, file_path))
+        file_download_thread = threading.Thread(target=self.file_download_handler, args=(target, file_socket, file_path, file_size))
         file_download_thread.start()
 
-    def file_download_handler(self, target, file_socket, file_path):
+    def file_download_handler(self, target, file_socket, file_path, file_size):
         data = b''
         _, file_name = os.path.split(file_path)
-        while True:
+        while len(data) < file_size:
             data += file_socket.recv(1024)
             if not data:
                 break
