@@ -3,8 +3,29 @@ import threading
 import pickle
 import backend.utils as utils
 import os
+from collections import deque
 
-
+class ServerMessageBuffer:
+    def __init__(self, max_len):
+        self.max_len = max_len
+        # a little different from user message buffer
+        # a buffer with key: username, value: a dict with username as value and a deque of messages as value
+        self.buffer = {}
+        self.lock = threading.Lock()
+    
+    def add_messages(self, ufrom, buffer):
+        self.lock.acquire()
+        self.buffer[ufrom] = buffer
+        self.lock.release()
+    
+    def get_messages(self, ufrom):
+        self.lock.acquire()
+        if ufrom not in self.buffer:
+            self.lock.release()
+            return dict()
+        ret = self.buffer[ufrom].copy()
+        self.lock.release()
+        return ret
 
 class Server:
     def __init__(self):
@@ -16,6 +37,7 @@ class Server:
         self.lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.lsock.bind((self.HOST, self.PORT))
         self.lsock.listen(5)
+        self.message_buffer = ServerMessageBuffer(20)
         print("listening on", (self.HOST, self.PORT))
 
         try:
@@ -52,6 +74,7 @@ class Server:
                 if username is None:
                     conn.close()
                     exit(0)
+                self.message_buffer.add_messages(username, data.message_sync)
                 print(f"Connection form {username} is closed")
                 self.clients_meta[username]["is_online"] = False
                 self.clients_meta[username]["conn"] = None
@@ -83,6 +106,7 @@ class Server:
                     socket_send(conn, utils.SysWarning("Success"))
                     self.clients_meta[data.username] = {"password": data.password, "is_online": True, "conn": conn}
                 username = data.username
+                socket_send(conn, utils.Request("get_message_list", self.message_buffer.get_messages(username))) 
                 print(self.clients_meta.keys())
             # handle message request
             elif isinstance(data, utils.Message):

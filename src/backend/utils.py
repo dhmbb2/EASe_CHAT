@@ -31,11 +31,12 @@ class SysWarning:
         self.message = message
 
 class closeConnection:
-    def __init__(self, is_abrupt) -> None:
+    def __init__(self, is_abrupt, message_sync=None) -> None:
         self.is_abrupt = is_abrupt
+        self.message_sync = message_sync
 
 class Request:
-    "Request can either be get_user_list, file_port "
+    "Request can either be get_user_list, file_port, get_message_list"
     def __init__(self, request, object=None):
         self.request = request
         self.object = object
