@@ -5,6 +5,7 @@ import backend.utils as utils
 import os
 from queue import Queue
 import json
+from collections import deque
 
 FileCache_root = "UserFileCache"
 
@@ -18,7 +19,7 @@ class MessageBuffer:
     def add_message(self, ufrom, user, time, message):
         self.lock.acquire()
         if ufrom not in self.buffer:
-            self.buffer[ufrom] = []
+            self.buffer[ufrom] = deque([], self.max_len)
         self.buffer[ufrom].append((user, time, message))
         self.lock.release()
     
@@ -30,7 +31,11 @@ class MessageBuffer:
         ret = self.buffer[username].copy()
         self.lock.release()
         return ret
-
+    
+    def flush_buffer(self):
+        self.lock.acquire()
+        self.buffer = {}
+        self.lock.release()
 class Client:
     def __init__(self, in_queue: Queue, out_queue: Queue, HOST, PORT):
         self.HOST = HOST
@@ -74,7 +79,9 @@ class Client:
                 ret = self.sign_up(username, password)
             self.out_queue.put(ret)
             auth_success = ret[0]
-
+        buffer = pickle.loads(self.csock.recv(1024))
+        assert buffer.request == "get_message_list", "Wrong item collected"
+        self.message_buffer.buffer = buffer.object
         self.username = username
         print("Auth success")
         
@@ -98,10 +105,11 @@ class Client:
             elif option[0] == "download_file":
                 self.download_file(option[1], option[2])
             elif option[0] == "xx":
-                self.csock.send(pickle.dumps(utils.closeConnection(is_abrupt=True)))
+                self.csock.send(pickle.dumps(utils.closeConnection(is_abrupt=True, message_sync=self.message_buffer.buffer)))
                 exit(0)
             elif option[0] == "sign_out":
-                self.csock.send(pickle.dumps(utils.closeConnection(is_abrupt=False)))
+                self.csock.send(pickle.dumps(utils.closeConnection(is_abrupt=False, message_sync=self.message_buffer.buffer)))
+                self.message_buffer.flush_buffer()
                 # self.client_exit_event.set()    
                 return
     
