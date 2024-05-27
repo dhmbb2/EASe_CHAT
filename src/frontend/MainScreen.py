@@ -16,12 +16,12 @@ title_font = 'src/fonts/FZFWZhuZGDSMCJW.TTF'
 word_font = 'src/fonts/FZFWZhuZGDSMCJW.TTF'
 
 zh_texts = {
-    'title': '和你的好友聊天吧！',
+    'title': '，和你的好友聊天吧！',
     'sign out': '退出登录',
 }
 
 en_texts = {
-    'title': 'Start CHAT to your friends!',
+    'title': ', Start CHAT to your friends!',
     'sign out': 'Sign out',
 }
 
@@ -79,7 +79,7 @@ class MainScreen(Screen):
             self.layout.clear_widgets()
             # 显示标题
             title_box = BoxLayout(orientation='horizontal', size_hint=(1, 0.3))
-            title_box.add_widget(Label(text=self.texts['title'], font_size=50, pos_hint={'center_x': 0.5}, color=word_color, font_name=title_font, size_hint=(0.8, 1)))
+            title_box.add_widget(Label(text=self.my_name[0]+self.texts['title'], font_size=50, pos_hint={'center_x': 0.5}, color=word_color, font_name=title_font, size_hint=(0.8, 1)))
             exit_button = Button(font_size=30, text=self.texts['sign out'], size_hint=(0.2, 1), background_normal='', background_color=[0,0,0,0], font_name=title_font, color=word_color)
             exit_button.bind(on_press=lambda x: self.do_exit())
             title_box.add_widget(exit_button)

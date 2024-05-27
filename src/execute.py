@@ -14,7 +14,7 @@ class WindowManager(ScreenManager):
 class CHAT(App):
     def build(self):
         self.title = 'EASE'
-        Window.size = (800, 600)
+        self.icon = r'src\logo.png'
         Window.clearcolor = hex_to_rgb('#282828')
         self.manager = ClientManager(HOST = "127.0.0.1",PORT = 11451)
         self.my_name = ['You-Know-Who']
