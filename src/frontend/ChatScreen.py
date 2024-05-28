@@ -34,6 +34,7 @@ zh_texts = {
     'file_tag': '文件',
     'download_warning': '下载出错',
     'choose_file': '选择文件',
+    'Already downloaded!': '文件已下载！',
 }
 
 en_texts = {
@@ -44,6 +45,7 @@ en_texts = {
     'file_tag': 'File',
     'download_warning': 'Download warning',
     'choose_file': 'Choose a file',
+    'Already downloaded!': 'Already downloaded!',
 }
 
 class ChatScreen(Screen):
@@ -193,7 +195,7 @@ class ChatScreen(Screen):
                             # download_button = Button(text='Download', size_hint=(0.15, 1), color=word_color, font_name=word_font, font_size=25)
                             # download_button.bind(on_press=lambda x: self.do_get_file(item[1]))
                             # file_box.add_widget(download_button)
-                            popup = Popup(title=self.texts['download_warning'], content=Label(text=item[2], color=word_color, font_name=word_font, font_size=25), size=(400, 200), size_hint=(None, None), title_font=word_font)
+                            popup = Popup(title=self.texts['download_warning'], content=Label(text=self.texts[item[2]], color=word_color, font_name=word_font, font_size=25), size=(400, 200), size_hint=(None, None), title_font=word_font)
                             popup.open()
                         elif item[2]:
                             download_button = Button(text=self.texts['download'], size_hint=(0.15, 1), color=word_color, font_name=word_font, font_size=25)
@@ -212,7 +214,7 @@ class ChatScreen(Screen):
                             # download_button = Button(text='Download', size_hint=(0.15, 1), color=word_color, font_name=word_font, font_size=25)
                             # download_button.bind(on_press=lambda x: self.do_get_file(item[1]))
                             # file_box.add_widget(download_button)
-                            popup = Popup(title=self.texts['download_warning'], content=Label(text=item[2], color=word_color, font_name=word_font, font_size=25), size=(400, 200), size_hint=(None, None), title_font=word_font)
+                            popup = Popup(title=self.texts['download_warning'], content=Label(text=self.texts[item[2]], color=word_color, font_name=word_font, font_size=25), size=(400, 200), size_hint=(None, None), title_font=word_font)
                             popup.open()
                         elif item[2]:
                             download_button = Button(text=self.texts['download'], size_hint=(0.15, 1), color=word_color, font_name=word_font, font_size=25)

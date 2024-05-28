@@ -123,9 +123,7 @@ class MainScreen(Screen):
         self.clock_event = None
         self.client_manager.sign_out_api()
         App.get_running_app().root.current = 'login'
-
-
-
+        
 class DebugApp(App):
     def build(self):
         sm = ScreenManager()

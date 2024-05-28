@@ -9,6 +9,7 @@ from kivy.core.text import Label as CoreLabel
 from kivy.properties import StringProperty
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.core.window import Window
+import re
 
 
 def hex_to_rgb(hex_color, alpha=1.0):
@@ -58,7 +59,13 @@ class WrapTextInput(RelativeLayout):
         if keyboard == 13 and 'ctrl' in modifiers:
             self.screen.do_send_message()
             return True
-        # 在这里添加你想要执行的操作
+
+def login_filter(text):
+    filtered_text = re.sub(r'[^a-zA-Z0-9_@.]', '', text)
+    if filtered_text != text:
+        return False
+    else:
+        return True
 
 class MyApp(App):
     def build(self):
@@ -68,4 +75,7 @@ class MyApp(App):
         return layout
 
 if __name__ == '__main__':
-    MyApp().run()
+
+    print(login_filter('huanyuqingming@sjtu.edu.cn'))
+
+    # MyApp().run()

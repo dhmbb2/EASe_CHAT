@@ -6,6 +6,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.popup import Popup
+from kivy.uix.image import Image
 import kivy.graphics
 from frontend.utils import *
 
@@ -20,26 +21,46 @@ zh_texts = {
     'title': '欢迎使用易思', 
     'sign in': '登录',
     'sign up': '注册',
-    'user name': '用户名',
+    'user name': '交大邮箱',
     'password': '密码',
     'go': '开始！',
-    'error': '错啦！',
+    'error': '出错啦！',
     'success': '好欸！',
     'please enter': '请输入用户名和密码。',
     'language': 'English version',
+    'User already exists!': '用户已存在！',
+    'User already online!': '用户已在线！',
+    'Sign in successfully!': '登录成功！',
+    'Sign up successfully!': '注册成功！',
+    'No such user!': '此用户不存在！',
+    'Wrong password!': '密码错误！',
+    'username format error1': '请输入交大邮箱',
+    'username format error2': '邮箱地址只能包含数字、大小写字母以及“@_.”！',
+    'password format error1': '密码只能包含数字、大小写字母以及“@_.”！',
+    'password format error2': '密码长度必须在6-20位之间！'
 }
 
 en_texts = {
     'title': 'Welcome to EASEchat', 
     'sign in': 'Sign in',
     'sign up': 'Sign up',
-    'user name': 'User Name',
+    'user name': 'SJTU Email',
     'password': 'Password',
     'go': 'Go!',
     'error': 'Error',
     'success': 'Success',
     'please enter': 'Please enter your username and password.',
     'language': '中文版',
+    'User already exists!': 'User already exists!',
+    'User already online!': 'User already online!',
+    'Sign in successfully!': 'Sign in successfully!',
+    'Sign up successfully!': 'Sign up successfully!',
+    'No such user!': 'No such user!',
+    'Wrong password!': 'Wrong password!',
+    'username format error1': 'Please enter SJTU email address',
+    'username format error2': 'Email address can only contain numbers, letters and \"@_.\"!',
+    'password format error1': 'Password can only contain numbers, letters and \"@_.\"!',
+    'password format error2': 'Password length must be between 6 and 20!'
 }
 
 class LoginScreen(Screen):
@@ -58,7 +79,10 @@ class LoginScreen(Screen):
         self.layout = BoxLayout(orientation='vertical', spacing=20, padding=[0, 50, 0, 0])
         # 标题
         self.title_box= BoxLayout(orientation='vertical', size_hint=(1, 0.2), spacing=-100)
-        self.title_box.add_widget(Label(text=self.texts['title'], font_size=70, pos_hint={'center_x': 0.5}, color=word_color, font_name=title_font))
+        self.title = BoxLayout(orientation='horizontal', pos_hint={'center_x': 0.5}, spacing=-300)
+        self.title.add_widget(Label(text=self.texts['title'], font_size=70, pos_hint={'center_x': 0.5}, color=word_color, font_name=title_font))
+        # self.title.add_widget(Image(source=r'src\logo.png'))
+        self.title_box.add_widget(self.title)
         self.title_box.add_widget(Label(text='Efficient And SEcure chat', font_size=30, pos_hint={'center_x': 0.5}, color=word_color, font_name=title_font))
         self.layout.add_widget(self.title_box)
 
@@ -82,7 +106,7 @@ class LoginScreen(Screen):
         self.username_box = BoxLayout(orientation='vertical', spacing=-30, size_hint=(1, 0.1))
         self.username_title = Label(text=self.texts['user name'], font_size=30, pos_hint={'center_x': 0.5}, color=word_color, font_name=word_font)
         self.username_box.add_widget(self.username_title)
-        self.username = TextInput(multiline=False, size_hint=(0.6, 0.35), pos_hint={'center_x': 0.5}, font_name=word_font)
+        self.username = TextInput(multiline=False, size_hint=(0.6, 0.35), pos_hint={'center_x': 0.5}, font_name=word_font, text='@sjtu.edu.cn')
         self.username.background_color = textbox_color
         self.username.foreground_color = input_word_color
         self.username.bind(on_text_validate=self.do_go)
@@ -130,21 +154,45 @@ class LoginScreen(Screen):
         self.is_in = False
 
     def do_go(self, instance=None):
-        if self.username.text == '' or self.password.text == '':
+        if self.username.text == '' or self.password.text == '' or self.username.text == '@sjtu.edu.cn':
             popup = Popup(title=self.texts['error'], content=Label(text=self.texts['please enter'], text_size=(300, None), font_name=word_font, font_size=25), size=(400, 200), size_hint=(None, None), title_font=word_font)
             popup.open()
         else:
-            is_success, word = self.client_manager.sign_api(is_in=self.is_in, user_name=self.username.text, password=self.password.text)
+            # 检查用户名和密码格式
+            if not self.username.text.endswith('@sjtu.edu.cn'):
+                popup = Popup(title=self.texts['error'], content=Label(text=self.texts['username format error1'], text_size=(300, None), font_name=word_font, font_size=25), size=(400, 200), size_hint=(None, None), title_font=word_font)
+                popup.open()
+                return
+
+            user_name_is_formatted = login_filter(self.username.text)
+            if not user_name_is_formatted:
+                popup = Popup(title=self.texts['error'], content=Label(text=self.texts['username format error2'], text_size=(300, None), font_name=word_font, font_size=25), size=(400, 200), size_hint=(None, None), title_font=word_font)
+                popup.open()
+                return
+
+            password_is_formatted = login_filter(self.password.text)
+            if not password_is_formatted:
+                popup = Popup(title=self.texts['error'], content=Label(text=self.texts['password format error1'], text_size=(300, None), font_name=word_font, font_size=25), size=(400, 200), size_hint=(None, None), title_font=word_font)
+                popup.open()
+                return
+            
+            if len(self.password.text) < 6 or len(self.password.text) > 20:
+                popup = Popup(title=self.texts['error'], content=Label(text=self.texts['password format error2'], text_size=(300, None), font_name=word_font, font_size=25), size=(400, 200), size_hint=(None, None), title_font=word_font)
+                popup.open()
+                return
+
+            # 登录/注册
+            is_success, word = self.client_manager.sign_api(is_in=self.is_in, user_name=self.username.text.replace('@sjtu.edu.cn', ''), password=self.password.text)
             # is_success, word = True, 'Success' # 注释这一行
             if is_success:
-                self.my_name[0] = self.username.text
-                popup = Popup(title=self.texts['success'], content=Label(text=word, text_size=(300, None), font_name=word_font, font_size=25), size=(400, 200), size_hint=(None, None), title_font=word_font)
+                self.my_name[0] = self.username.text.replace('@sjtu.edu.cn', '')
+                popup = Popup(title=self.texts['success'], content=Label(text=self.texts[word], text_size=(300, None), font_name=word_font, font_size=25), size=(400, 200), size_hint=(None, None), title_font=word_font)
                 popup.open()
                 popup.bind(on_dismiss=lambda x: self.go_to_main())
                 self.username.text = ''
                 self.password.text = ''
             else:
-                popup = Popup(title=self.texts['error'], content=Label(text=word, text_size=(300, None), font_name=word_font, font_size=25), size=(400, 200), size_hint=(None, None), title_font=word_font)
+                popup = Popup(title=self.texts['error'], content=Label(text=self.texts[word], text_size=(300, None), font_name=word_font, font_size=25), size=(400, 200), size_hint=(None, None), title_font=word_font)
                 popup.open()
 
     def change_language(self):
