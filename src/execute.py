@@ -2,6 +2,7 @@ from kivy.app import App
 from kivy.core.window import Window
 from kivy.uix.screenmanager import ScreenManager, Screen
 from frontend.LoginScreen import LoginScreen
+from frontend.AuthcodeScreen import AuthcodeScreen
 from frontend.MainScreen import MainScreen
 from frontend.ChatScreen import ChatScreen
 from backend.apis import ClientManager
@@ -23,6 +24,7 @@ class CHAT(App):
         Window.bind(on_resize=self.on_window_resize)
         wm = WindowManager()
         wm.add_widget(LoginScreen(self.my_name, self.manager, self.language_version, name='login'))
+        wm.add_widget(AuthcodeScreen(self.my_name, self.manager, self.language_version, name='authcode'))
         wm.add_widget(MainScreen(self.my_name, self.manager, self.language_version, name='main'))
         wm.add_widget(ChatScreen(self.my_name, self.manager, self.language_version, name='chat'))
         return wm

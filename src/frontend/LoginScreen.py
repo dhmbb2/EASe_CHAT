@@ -37,7 +37,8 @@ zh_texts = {
     'username format error1': '请输入交大邮箱',
     'username format error2': '邮箱地址只能包含数字、大小写字母以及“@_.”！',
     'password format error1': '密码只能包含数字、大小写字母以及“@_.”！',
-    'password format error2': '密码长度必须在6-20位之间！'
+    'password format error2': '密码长度必须在6-20位之间！',
+    'auth_code_error': '验证码发送失败，请重试！',
 }
 
 en_texts = {
@@ -60,7 +61,8 @@ en_texts = {
     'username format error1': 'Please enter SJTU email address',
     'username format error2': 'Email address can only contain numbers, letters and \"@_.\"!',
     'password format error1': 'Password can only contain numbers, letters and \"@_.\"!',
-    'password format error2': 'Password length must be between 6 and 20!'
+    'password format error2': 'Password length must be between 6 and 20!',
+    'auth_code_error': 'Failed to send auth code, please try again!',
 }
 
 class LoginScreen(Screen):
@@ -182,7 +184,21 @@ class LoginScreen(Screen):
                 return
 
             # 登录/注册
-            is_success, word = self.client_manager.sign_api(is_in=self.is_in, user_name=self.username.text.replace('@sjtu.edu.cn', ''), password=self.password.text)
+            if self.is_in:  # 登录
+                is_success, word = self.client_manager.sign_in_api(user_name=self.username.text.replace('@sjtu.edu.cn', ''), password=self.password.text)
+                # is_success, word = True, 'Sign in successfully!' # 注释这一行
+            else:           # 注册
+                is_send = self.client_manager.sign_up_api(user_name=self.username.text.replace('@sjtu.edu.cn', ''), password=self.password.text)
+                # is_send = True # 注释这一行
+                if not is_send:
+                    popup = Popup(title=self.texts['error'], content=Label(text=self.texts['auth_code_error'], text_size=(300, None), font_name=word_font, font_size=25), size=(400, 200), size_hint=(None, None), title_font=word_font)
+                    popup.open()
+                    return
+                else:
+                    self.layout.clear_widgets()
+                    self.my_name[0] = self.username.text.replace('@sjtu.edu.cn', '')
+                    App.get_running_app().root.current = 'authcode'
+                    return
             # is_success, word = True, 'Success' # 注释这一行
             if is_success:
                 self.my_name[0] = self.username.text.replace('@sjtu.edu.cn', '')
