@@ -18,8 +18,6 @@ from datetime import datetime
 
 word_color = hex_to_rgb('#CCCCCC')
 my_word_color = hex_to_rgb('#4EC9B0')
-word_background_color = my_word_color
-my_word_background_color = word_color
 textbox_color = hex_to_rgb('#CACACA')
 input_word_color = hex_to_rgb('#282828')
 

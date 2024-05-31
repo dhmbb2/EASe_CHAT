@@ -83,7 +83,7 @@ class AuthcodeScreen(Screen):
         App.get_running_app().root.current = 'login'
 
     def do_submit_authcode(self, instance): 
-        is_success = self.client_manager.auth_code_api(self.my_name, self.authcode_input.text)
+        is_success = self.client_manager.auth_code_api(self.my_name[0], self.authcode_input.text)
         # is_success = False
         if is_success:
             self.layout.clear_widgets()
