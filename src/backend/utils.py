@@ -22,9 +22,11 @@ class File:
         self.ask_for_download = ask_for_download
 
 class Auth(Credentials):
-    def __init__(self, username, password, sign_in):
+    def __init__(self, username, password, sign_in, is_code_mode=False, code=None):
         super().__init__(username, password)
         self.sign_in = sign_in
+        self.is_code_mode = is_code_mode
+        self.code = code
 
 class SysWarning:
     def __init__(self, message):

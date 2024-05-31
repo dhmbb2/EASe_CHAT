@@ -64,21 +64,30 @@ class Client:
     def execute_from_sign_in(self):
         auth_success = False
         # self.client_exit_event.clear()
+        sign_up_password = None
 
         while not auth_success:
             item = self.in_queue.get()
             if item[0] == "xx":
                 self.csock.send(pickle.dumps(utils.closeConnection(is_abrupt=True)))
                 exit(0)
-            if item[0] != "sign":
+            if item[0] != "sign_in" and item[0] != "sign_up" and item[0] != "auth_code":
                 continue
-            _, is_in, username, password = item
-            if is_in:
+            
+            opcode, username, password = item
+            if opcode == "sign_in":
                 ret = self.sign_in(username, password)
-            else:
+                self.out_queue.put(ret)
+                auth_success = ret[0]
+            elif opcode == "sign_up":
                 ret = self.sign_up(username, password)
-            self.out_queue.put(ret)
-            auth_success = ret[0]
+                sign_up_password = password
+                self.out_queue.put(ret)
+                continue
+            elif opcode == "auth_code":
+                ret = self.auth_code(username, password, sign_up_password)
+                self.out_queue.put(ret)
+                auth_success = ret
         buffer = pickle.loads(self.csock.recv(1024))
         assert buffer.request == "get_message_list", "Wrong item collected"
         self.message_buffer.buffer = buffer.object
@@ -129,10 +138,19 @@ class Client:
         self.csock.send(pickle.dumps(utils.Auth(username, password, False)))
         data = pickle.loads(self.csock.recv(1024))
         assert isinstance(data, utils.SysWarning), "data is of the wrong type"
-        if data.message == "Success":
-            return (True, "Sign up successfully!")
+        if data.message == "Sent successfully":
+            return True
         else:
-            return (False, data.message)
+            return False
+    
+    def auth_code(self, username, auth_code, sign_up_password):
+        self.csock.send(pickle.dumps(utils.Auth(username, sign_up_password, False, True, int(auth_code))))
+        data = pickle.loads(self.csock.recv(1024))
+        assert isinstance(data, utils.SysWarning), "data is of the wrong type"
+        if data.message == "Auth Code Matched":
+            return True
+        else:
+            return False
         
     def get_messages(self, username):
         return self.message_buffer.get_messages(username)

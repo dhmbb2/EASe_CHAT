@@ -2,6 +2,10 @@ import socket
 import threading
 import pickle
 import backend.utils as utils
+import random
+import smtplib
+from smtplib import SMTP_SSL
+from email.mime.text import MIMEText
 import os
 from collections import deque
 
@@ -32,6 +36,10 @@ class Server:
         # username : [password, is_online, conn]
         self.clients_meta = {}
 
+        self.sender_server = 'mail.sjtu.edu.cn'
+        self.email_sender = "Fill the email here"
+        self.sender_password = "Fill your password here"
+
         self.HOST = "127.0.0.1"
         self.PORT = 11451
         self.lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -55,6 +63,7 @@ class Server:
     def connection_handler(self, conn, addr):
 
         username = None
+        gt_auth_code = None
 
         while True:
             data = conn.recv(1024)
@@ -87,27 +96,12 @@ class Server:
             # handle authorization request
             elif isinstance(data, utils.Auth):
                 print("AUTH ")
-                if data.sign_in:
-                    if not data.username in self.clients_meta.keys():
-                        socket_send(conn, utils.SysWarning("No such user!"))
-                        continue
-                    if data.password != self.clients_meta[data.username]["password"]:
-                        socket_send(conn, utils.SysWarning("Wrong password!"))
-                        continue
-                    if self.clients_meta[data.username]["is_online"]:
-                        socket_send(conn, utils.SysWarning("User already online!"))
-                        continue
-                    socket_send(conn, utils.SysWarning("Success"))
-                    self.clients_meta[data.username] = {"password": data.password, "is_online": True, "conn": conn}
-                else:
-                    if data.username in self.clients_meta.keys():
-                        socket_send(conn, utils.SysWarning("User already exists!"))
-                        continue
-                    socket_send(conn, utils.SysWarning("Success"))
-                    self.clients_meta[data.username] = {"password": data.password, "is_online": True, "conn": conn}
-                username = data.username
-                socket_send(conn, utils.Request("get_message_list", self.message_buffer.get_messages(username))) 
-                print(self.clients_meta.keys())
+                ret = self.deal_with_auth(conn, data, gt_auth_code)
+                print(ret)
+                if isinstance(ret, int):
+                    gt_auth_code = ret
+                elif isinstance(ret, str):
+                    username = ret
             # handle message request
             elif isinstance(data, utils.Message):
                 if data.uto in self.clients_meta.keys():
@@ -119,8 +113,7 @@ class Server:
                 if data.request == "get_user_list":
                     user_list = []
                     for key in self.clients_meta.keys():
-                        if self.clients_meta[key]["is_online"]:
-                            user_list.append(key)
+                        user_list.append((key, self.clients_meta[key]["is_online"]))
                     socket_send(conn, utils.Request("get_user_list", user_list))
             else:
                 conn.send(pickle.dumps(utils.SysWarning("Invalid request!")))
@@ -177,6 +170,79 @@ class Server:
         print("File sent")
         conn.close()
         file_socket.close()
+
+    def deal_with_auth(self, conn, data, auth_code):
+        assert isinstance(data, utils.Auth)
+        ## deal with auth code
+        if data.is_code_mode:
+            assert isinstance(auth_code, int)
+            if auth_code == data.code:
+                # successfully matched, return the username
+                socket_send(conn, utils.SysWarning("Auth Code Matched"))
+                self.clients_meta[data.username] = {"password": data.password, "is_online": True, "conn": conn}
+                socket_send(conn, utils.Request("get_message_list", self.message_buffer.get_messages(data.username))) 
+                print(self.clients_meta.keys())
+                return data.username
+            else:
+                socket_send(conn, utils.SysWarning("Auth Code MisMatched"))
+                return auth_code
+        if data.sign_in:
+            if not data.username in self.clients_meta.keys():
+                socket_send(conn, utils.SysWarning("No such user!"))
+                return None
+            print(f"aaa: {data.password}")
+            k = self.clients_meta[data.username]["password"]
+            print(f"bbbb: {k}")
+            if data.password != self.clients_meta[data.username]["password"]:
+                socket_send(conn, utils.SysWarning("Wrong password!"))
+                return None
+            if self.clients_meta[data.username]["is_online"]:
+                socket_send(conn, utils.SysWarning("User already online!"))
+                return None
+            socket_send(conn, utils.SysWarning("Success"))
+            self.clients_meta[data.username] = {"password": data.password, "is_online": True, "conn": conn}
+            socket_send(conn, utils.Request("get_message_list", self.message_buffer.get_messages(data.username))) 
+            print(self.clients_meta.keys())
+            return data.username
+        else:
+            if data.username in self.clients_meta.keys():
+                socket_send(conn, utils.SysWarning("User already exists!"))
+                return None
+            code = self.send_auth_code(data.username)
+            if code != 0:
+                socket_send(conn, utils.SysWarning("Sent successfully"))
+                return code
+            else: 
+                socket_send(conn, utils.SysWarning("Sent failed"))
+                return None
+
+    def send_auth_code_test(self, username):
+        code = random.randint(10000, 99999)
+        return code
+
+
+    def send_auth_code(self, username) -> int:
+        receiver = username + "@sjtu.edu.cn"
+        auth_code = random.randint(10000, 99999)
+        message = '''
+        <p>你的易思聊天注册验证码是：{} 喵～</p>
+        <p>验证码很关键，请主人千万不要和别人分享喵~</p>
+        '''.format(auth_code)
+        msg = MIMEText(message, 'html', _charset="utf-8")
+        msg["Subject"] = "Auth code for EASeChat"
+        msg["from"] = "ease"
+        msg["to"] = "主人大人"
+
+        try:
+            with SMTP_SSL(host=self.sender_server) as smtp:
+                smtp.login(user = self.email_sender, password = self.sender_password)
+                smtp.sendmail(self.email_sender, receiver, msg.as_string())
+            print("auth code sent successfully")
+            return auth_code
+        except smtplib.SMTPException:
+            return 0
+
+
                                    
 def socket_send(conn, data):
     try:

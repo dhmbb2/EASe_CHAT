@@ -9,6 +9,18 @@ class ClientManager:
         client_thread = Thread(target=Client(self.out_queue, self.in_queue, HOST, PORT))
         client_thread.start()
 
+    def sign_up_api(self, user_name, password) -> bool:
+        self.out_queue.put(("sign_up", user_name, password))
+        return self.in_queue.get()
+    
+    def sign_in_api(self, user_name, password) -> bool:
+        self.out_queue.put(("sign_in", user_name, password))
+        return self.in_queue.get()
+
+    def auth_code_api(self, user_name, auth_code) -> bool:
+        self.out_queue.put(("auth_code", user_name, auth_code))
+        return self.in_queue.get()
+
     def sign_api(self, is_in, user_name, password) -> tuple[bool, str]:
         self.out_queue.put(("sign", is_in, user_name, password))
         return self.in_queue.get()

@@ -9,3 +9,4 @@ src/test.py
 FileCache/
 MessageCache/
 UserFileCache/
+test.py
