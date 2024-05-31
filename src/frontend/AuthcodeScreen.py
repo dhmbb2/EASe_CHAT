@@ -69,7 +69,7 @@ class AuthcodeScreen(Screen):
 
         self.input_box = BoxLayout(orientation='vertical', size_hint=(1, 0.3), spacing=30, padding=[0, 100, 0, 220])
         self.layout.add_widget(self.input_box)
-        self.authcode_input = LimitedTextInput(multiline=False, size_hint=(0.5, 0.7), pos_hint={'center_x': 0.5}, cursor_color=word_color, font_name=word_font, font_size=100)
+        self.authcode_input = LimitedTextInput(multiline=False, size_hint=(0.3, 0.7), pos_hint={'center_x': 0.5}, cursor_color=word_color, font_name=word_font, font_size=100)
         self.authcode_input.background_color = textbox_color
         self.authcode_input.foreground_color = input_word_color
         self.authcode_input.halign = 'center'

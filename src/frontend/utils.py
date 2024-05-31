@@ -21,10 +21,15 @@ def get_time():
     current_time = datetime.now()
     formatted_time = current_time.strftime('%Y-%m-%d %H:%M')
     return formatted_time
+
 class LimitedTextInput(TextInput):
-    max_chars = 6  # 最大字符数
+    max_chars = 5  # 最大字符数
 
     def insert_text(self, substring, from_undo=False):
+        # 检查substring是否只包含数字
+        if not substring.isdigit():
+            # 如果不是，忽略它
+            return
         if len(self.text) + len(substring) > self.max_chars:
             substring = substring[:self.max_chars - len(self.text)]
         return super(LimitedTextInput, self).insert_text(substring, from_undo)
