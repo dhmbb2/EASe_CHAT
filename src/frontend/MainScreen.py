@@ -97,12 +97,12 @@ class MainScreen(Screen):
                 block_num = 4 - len(users)
                 user_buttons.add_widget(Widget())
                 for user in users:
-                    user_name = user[0]
                     is_online = user[1]
+                    user = user[0]
                     if is_online:
-                        user_button = Button(text=user_name, size_hint_y=None, height=Window.height*0.1, color=online_color, font_name=word_font, font_size=25)
+                        user_button = Button(text=user, size_hint_y=None, height=Window.height*0.1, color=online_color, font_name=word_font, font_size=25)
                     else:
-                        user_button = Button(text=user_name, size_hint_y=None, height=Window.height*0.1, color=word_color, font_name=word_font, font_size=25)
+                        user_button = Button(text=user, size_hint_y=None, height=Window.height*0.1, color=word_color, font_name=word_font, font_size=25)
                     user_button.bind(on_press=lambda x, user=user: self.do_chat(user))
                     user_buttons.add_widget(user_button)
                 for i in range(block_num+1):
