@@ -17,6 +17,15 @@ class ServerMessageBuffer:
         self.buffer = {}
         self.lock = threading.Lock()
     
+    def add_single_message(self, uto, ufrom, message):
+        self.lock.acquire()
+        if uto not in self.buffer:
+            self.buffer[uto] = dict()
+        if ufrom not in self.buffer[uto]:
+            self.buffer[uto][ufrom] = deque(maxlen=self.max_len)
+        self.buffer[uto][ufrom].append(message)
+        self.lock.release()
+
     def add_messages(self, ufrom, buffer):
         self.lock.acquire()
         self.buffer[ufrom] = buffer
@@ -106,7 +115,10 @@ class Server:
             elif isinstance(data, utils.Message):
                 if data.uto in self.clients_meta.keys():
                     print(f"get message: {data.message}")
-                    socket_send(self.clients_meta[data.uto]["conn"], data)
+                    if self.clients_meta[data.uto]["conn"] is not None:
+                        socket_send(self.clients_meta[data.uto]["conn"], data)
+                    else:
+                        self.message_buffer.add_single_message(data.uto, data.ufrom, ((data.ufrom, data.time, data.message)))
             elif isinstance(data, utils.File):
                 self.deal_with_file(conn, data)
             elif isinstance(data, utils.Request):
@@ -180,7 +192,9 @@ class Server:
                 # successfully matched, return the username
                 socket_send(conn, utils.SysWarning("Auth Code Matched"))
                 self.clients_meta[data.username] = {"password": data.password, "is_online": True, "conn": conn}
+                print("I am here")
                 socket_send(conn, utils.Request("get_message_list", self.message_buffer.get_messages(data.username))) 
+                print("I am there")
                 print(self.clients_meta.keys())
                 return data.username
             else:
@@ -201,7 +215,10 @@ class Server:
                 return None
             socket_send(conn, utils.SysWarning("Success"))
             self.clients_meta[data.username] = {"password": data.password, "is_online": True, "conn": conn}
+            print("I am here")
+            print(self.message_buffer.get_messages(data.username))
             socket_send(conn, utils.Request("get_message_list", self.message_buffer.get_messages(data.username))) 
+            print("I am there")
             print(self.clients_meta.keys())
             return data.username
         else:

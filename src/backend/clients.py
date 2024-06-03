@@ -88,7 +88,7 @@ class Client:
                 ret = self.auth_code(username, password, sign_up_password)
                 self.out_queue.put(ret)
                 auth_success = ret
-        buffer = pickle.loads(self.csock.recv(1024))
+        buffer = pickle.loads(self.csock.recv(4096))
         assert buffer.request == "get_message_list", "Wrong item collected"
         self.message_buffer.buffer = buffer.object
         self.username = username
@@ -121,12 +121,12 @@ class Client:
                 self.message_buffer.flush_buffer()
                 # self.client_exit_event.set()    
                 return
-    
+
 
     def sign_in(self, username, password):
         # send the message
         self.csock.send(pickle.dumps(utils.Auth(username, password, True)))
-        data = pickle.loads(self.csock.recv(1024))
+        data = pickle.loads(self.csock.recv(4096))
         assert isinstance(data, utils.SysWarning), "data is of the wrong type"
         if data.message == "Success":
             return (True, "Sign in successfully!")
@@ -136,7 +136,7 @@ class Client:
         
     def sign_up(self, username, password):
         self.csock.send(pickle.dumps(utils.Auth(username, password, False)))
-        data = pickle.loads(self.csock.recv(1024))
+        data = pickle.loads(self.csock.recv(4096))
         assert isinstance(data, utils.SysWarning), "data is of the wrong type"
         if data.message == "Sent successfully":
             return True
@@ -145,7 +145,7 @@ class Client:
     
     def auth_code(self, username, auth_code, sign_up_password):
         self.csock.send(pickle.dumps(utils.Auth(username, sign_up_password, False, True, int(auth_code))))
-        data = pickle.loads(self.csock.recv(1024))
+        data = pickle.loads(self.csock.recv(4096))
         assert isinstance(data, utils.SysWarning), "data is of the wrong type"
         if data.message == "Auth Code Matched":
             return True
@@ -175,7 +175,7 @@ class Client:
         with open(file_path, 'rb') as f:    
             bytes_sent = 0
             while bytes_sent < file_size:
-                file_data = f.read(1024)
+                file_data = f.read(4096)
                 if not file_data:
                     break  # 文件读取完毕
                 self.csock.sendall(file_data)
@@ -251,12 +251,13 @@ class Client:
     
 def recv_handler(csock, buffer, recv_queue):
     while True:
-        data = csock.recv(1024)
+        data = csock.recv(4096)
         data = pickle.loads(data)
         if isinstance(data, utils.Message):
             buffer.add_message(data.ufrom, data.ufrom, data.time, data.message)
         elif isinstance(data, utils.Request):
             if data.request == "get_user_list":
+                print("in recv handler")
                 recv_queue.put(data.object)
             elif data.request == "file_port":
                 recv_queue.put(data.object)
@@ -279,7 +280,7 @@ def handle_image(csock, header):
 
     data = b''
     while len(data) < length:
-        data += csock.recv(1024)
+        data += csock.recv(4096)
 
     with open(name, 'wb') as file:
         file.write(data)
