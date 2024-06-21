@@ -36,6 +36,7 @@ class MessageBuffer:
         self.lock.acquire()
         self.buffer = {}
         self.lock.release()
+
 class Client:
     def __init__(self, in_queue: Queue, out_queue: Queue, HOST, PORT):
         self.HOST = HOST

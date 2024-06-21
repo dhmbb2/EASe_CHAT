@@ -192,9 +192,7 @@ class Server:
                 # successfully matched, return the username
                 socket_send(conn, utils.SysWarning("Auth Code Matched"))
                 self.clients_meta[data.username] = {"password": data.password, "is_online": True, "conn": conn}
-                print("I am here")
-                socket_send(conn, utils.Request("get_message_list", self.message_buffer.get_messages(data.username))) 
-                print("I am there")
+                socket_send(conn, utils.Request("get_message_list", self.message_buffer.get_messages(data.username)))
                 print(self.clients_meta.keys())
                 return data.username
             else:
