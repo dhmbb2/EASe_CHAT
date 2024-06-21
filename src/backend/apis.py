@@ -27,7 +27,6 @@ class ClientManager:
     
     def get_user_list_api(self) -> list:
         self.out_queue.put(("user_list",))
-        print("in api")
         # list = self.in_queue.get()
         # sorted_list = sorted(list, key=lambda x: not x[1])
         # return sorted_list

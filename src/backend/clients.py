@@ -258,7 +258,6 @@ def recv_handler(csock, buffer, recv_queue):
             buffer.add_message(data.ufrom, data.ufrom, data.time, data.message)
         elif isinstance(data, utils.Request):
             if data.request == "get_user_list":
-                print("in recv handler")
                 recv_queue.put(data.object)
             elif data.request == "file_port":
                 recv_queue.put(data.object)

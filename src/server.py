@@ -166,7 +166,11 @@ class Server:
             # cache the file
             with open(save_path, "wb") as file:
                 file.write(file_data)
-            socket_send(self.clients_meta[data.uto]["conn"], utils.File(data.uto, data.ufrom, data.time, data.file_name, data.length, False))
+            # if the user is online, directly send the notification
+            if self.clients_meta[data.uto]["conn"] is not None:
+                socket_send(self.clients_meta[data.uto]["conn"], utils.File(data.uto, data.ufrom, data.time, data.file_name, data.length, False))
+            else:
+                self.message_buffer.add_single_message(data.uto, data.ufrom, ((data.ufrom, data.time, ("file", data.file_name, True))))
             print("Notification Sent")
 
     def file_download_handler(self, file_socket, file_path, file_size):
@@ -223,7 +227,7 @@ class Server:
             if data.username in self.clients_meta.keys():
                 socket_send(conn, utils.SysWarning("User already exists!"))
                 return None
-            code = self.send_auth_code(data.username)
+            code = self.send_auth_code_test(data.username)
             if code != 0:
                 socket_send(conn, utils.SysWarning("Sent successfully"))
                 return code
