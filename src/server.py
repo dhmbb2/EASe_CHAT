@@ -206,9 +206,6 @@ class Server:
             if not data.username in self.clients_meta.keys():
                 socket_send(conn, utils.SysWarning("No such user!"))
                 return None
-            print(f"aaa: {data.password}")
-            k = self.clients_meta[data.username]["password"]
-            print(f"bbbb: {k}")
             if data.password != self.clients_meta[data.username]["password"]:
                 socket_send(conn, utils.SysWarning("Wrong password!"))
                 return None
@@ -217,17 +214,14 @@ class Server:
                 return None
             socket_send(conn, utils.SysWarning("Success"))
             self.clients_meta[data.username] = {"password": data.password, "is_online": True, "conn": conn}
-            print("I am here")
-            print(self.message_buffer.get_messages(data.username))
             socket_send(conn, utils.Request("get_message_list", self.message_buffer.get_messages(data.username))) 
-            print("I am there")
             print(self.clients_meta.keys())
             return data.username
         else:
             if data.username in self.clients_meta.keys():
                 socket_send(conn, utils.SysWarning("User already exists!"))
                 return None
-            code = self.send_auth_code_test(data.username)
+            code = self.send_auth_code(data.username)
             if code != 0:
                 socket_send(conn, utils.SysWarning("Sent successfully"))
                 return code

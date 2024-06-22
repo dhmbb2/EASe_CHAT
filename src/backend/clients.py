@@ -178,7 +178,7 @@ class Client:
             while bytes_sent < file_size:
                 file_data = f.read(4096)
                 if not file_data:
-                    break  # 文件读取完毕
+                    break  
                 self.csock.sendall(file_data)
                 bytes_sent += len(file_data)
         print("File sent")
@@ -262,10 +262,8 @@ def recv_handler(csock, buffer, recv_queue):
             elif data.request == "file_port":
                 recv_queue.put(data.object)
         elif isinstance(data, utils.File):
-            print("Notifi recv")
             buffer.add_message(data.ufrom, data.ufrom, data.time, ("file", data.file_name, True))
         elif isinstance(data, utils.closeConnection):
-            print("recv close")
             if data.is_abrupt:
                 csock.close()
             exit(0)
