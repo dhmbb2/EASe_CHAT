@@ -17,7 +17,7 @@ class CHAT(App):
         self.title = 'EASE'
         self.icon = r'src\logo.png'
         Window.clearcolor = hex_to_rgb('#282828')
-        self.manager = ClientManager(HOST = "127.0.0.1",PORT = 11451)
+        self.manager = ClientManager(HOST = "127.0.0.1",PORT = 11452)
         self.my_name = ['You-Know-Who']
         self.language_version = ['zh']
         # self.manager = None

@@ -46,11 +46,11 @@ class Server:
         self.clients_meta = {}
 
         self.sender_server = 'mail.sjtu.edu.cn'
-        self.email_sender = "Fill the email here"
-        self.sender_password = "Fill your password here"
+        self.email_sender = "huanyuqingming@sjtu.edu.cn"
+        self.sender_password = "tiao20040526"
 
         self.HOST = "127.0.0.1"
-        self.PORT = 11451
+        self.PORT = 11452
         self.lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.lsock.bind((self.HOST, self.PORT))
         self.lsock.listen(5)
