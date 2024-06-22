@@ -1,4 +1,4 @@
-<p align="center"><img src="src/logo.png" width="20%"></p>
+<p align="center"><img src="src/logo.png" width="10%"></p>
 
 # 易思 ![Static Badge](https://img.shields.io/badge/toy-ChattingApp-blue)
 易思是一款基于Kivy架构的跨平台即时聊天应用程序，面向组织内部通讯需求，基于TCP可靠数据传输服务，帮助各类组织内部沟通更加高效安全。产品支持中英双语操作界面，提供基本的聊天功能，包括文字、图片、文件的发送，并且支持设备间文件互传功能。
